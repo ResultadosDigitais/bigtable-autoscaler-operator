@@ -1,0 +1,14 @@
+{
+  "Extensions": [
+    {
+      "Name": "kubebuilder",
+      "ExtensionRegistry": "https://github.com/tilt-dev/tilt-extensions",
+      "TimeFetched": "2021-04-01T16:06:22.567614178-03:00"
+    },
+    {
+      "Name": "restart_process",
+      "ExtensionRegistry": "https://github.com/tilt-dev/tilt-extensions",
+      "TimeFetched": "2021-04-01T16:06:24.390259164-03:00"
+    }
+  ]
+}
