@@ -18,7 +18,6 @@ package controllers
 
 import (
 	"context"
-	"math/rand"
 	"strings"
 	"time"
 
@@ -114,7 +113,7 @@ func (r *BigtableAutoscalerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 	autoscaler.Status.CurrentNodes = &currentNodes
 	r.Log.Info("Metric read", "node count", currentNodes)
 
-	var defaultMaxScaleDownNodes int32 = 2
+	var defaultMaxScaleDownNodes int32 = 1
 
 	if autoscaler.Spec.MaxScaleDownNodes == nil || *autoscaler.Spec.MaxScaleDownNodes == 0 {
 		autoscaler.Spec.MaxScaleDownNodes = &defaultMaxScaleDownNodes
@@ -151,7 +150,9 @@ func (r *BigtableAutoscalerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 		autoscaler.Status.LastScaleTime = &metav1.Time{Time: now}
 		r.Log.Info("Metric read", "Increasing node count to", desiredNodes)
 		err := scaleNodes(credentialsJSON, "cdp-development", "clustering-engine", "clustering-engine-c1", desiredNodes)
-		r.Log.Error(err, "failed to update nodes")
+		if err != nil {
+			r.Log.Error(err, "failed to update nodes")
+		}
 	}
 
 	if err = r.Client.Status().Update(ctx, autoscaler); err != nil {
@@ -328,8 +329,7 @@ func getMetrics(credentialsJSON []byte, projectID string) (int32, error) {
 		}
 
 		points := resp.Points
-		return int32(rand.Intn(40) + 50), nil
-		return int32(points[len(points)-1].GetValue().GetDoubleValue() * 1000000), nil
+		return int32(points[0].GetValue().GetDoubleValue() * 100), nil
 	}
 
 	return -1, nil
