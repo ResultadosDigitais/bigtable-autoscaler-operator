@@ -1,0 +1,7 @@
+domain: bigtable-autoscaler.com
+repo: bigtable-autoscaler.com/m/v2
+resources:
+- group: bigtable
+  kind: BigtableAutoscaler
+  version: v1
+version: "2"

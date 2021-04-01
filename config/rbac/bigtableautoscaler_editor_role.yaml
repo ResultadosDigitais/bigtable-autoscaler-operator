@@ -1,0 +1,24 @@
+# permissions for end users to edit bigtableautoscalers.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: bigtableautoscaler-editor-role
+rules:
+- apiGroups:
+  - bigtable.bigtable-autoscaler.com
+  resources:
+  - bigtableautoscalers
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - bigtable.bigtable-autoscaler.com
+  resources:
+  - bigtableautoscalers/status
+  verbs:
+  - get

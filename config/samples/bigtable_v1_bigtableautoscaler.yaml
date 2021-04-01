@@ -1,0 +1,12 @@
+apiVersion: bigtable.bigtable-autoscaler.com/v1
+kind: BigtableAutoscaler
+metadata:
+  name: bigtableautoscaler-sample
+spec:
+  serviceAccountSecretRef:
+    namespace: default
+    name: bigtable-autoscaler-service-account
+    key: service-account
+  minNodes: 1
+  maxNodes: 2
+  targetCPUUtilization: 50

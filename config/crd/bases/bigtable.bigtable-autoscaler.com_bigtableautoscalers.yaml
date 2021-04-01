@@ -1,0 +1,123 @@
+
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.2.5
+  creationTimestamp: null
+  name: bigtableautoscalers.bigtable.bigtable-autoscaler.com
+spec:
+  additionalPrinterColumns:
+  - JSONPath: .status.currentNodes
+    name: nodes
+    type: string
+  - JSONPath: .status.desiredNodes
+    name: desired_nodes
+    type: string
+  - JSONPath: .status.CPUUtilization
+    name: cpu_usage
+    type: string
+  - JSONPath: .spec.targetCPUUtilization
+    name: target_cpu
+    type: string
+  group: bigtable.bigtable-autoscaler.com
+  names:
+    kind: BigtableAutoscaler
+    listKind: BigtableAutoscalerList
+    plural: bigtableautoscalers
+    singular: bigtableautoscaler
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      description: BigtableAutoscaler is the Schema for the bigtableautoscalers API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: BigtableAutoscalerSpec defines the desired state of BigtableAutoscaler
+          properties:
+            maxNodes:
+              description: upper limit for the number of nodes that can be set by
+                the autoscaler. It cannot be smaller than MinNodes.
+              format: int32
+              minimum: 1
+              type: integer
+            maxScaleDownNodes:
+              description: upper limit for the number of nodes when autoscaler scaledown.
+              format: int32
+              minimum: 1
+              type: integer
+            minNodes:
+              description: lower limit for the number of nodes that can be set by
+                the autoscaler.
+              format: int32
+              minimum: 1
+              type: integer
+            serviceAccountSecretRef:
+              properties:
+                key:
+                  minLength: 1
+                  type: string
+                name:
+                  minLength: 1
+                  type: string
+                namespace:
+                  type: string
+              required:
+              - key
+              - name
+              type: object
+            targetCPUUtilization:
+              description: target average CPU utilization for Bigtable.
+              format: int32
+              type: integer
+          required:
+          - maxNodes
+          - minNodes
+          - serviceAccountSecretRef
+          - targetCPUUtilization
+          type: object
+        status:
+          description: BigtableAutoscalerStatus defines the observed state of BigtableAutoscaler
+          properties:
+            CPUUtilization:
+              format: int32
+              type: integer
+            currentNodes:
+              format: int32
+              type: integer
+            desiredNodes:
+              format: int32
+              type: integer
+            lastFetchTime:
+              format: date-time
+              type: string
+            lastScaleTime:
+              format: date-time
+              type: string
+          type: object
+      type: object
+  version: v1
+  versions:
+  - name: v1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
