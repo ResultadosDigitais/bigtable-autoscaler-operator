@@ -35,9 +35,9 @@ func NewClient(ctx context.Context, credentialsJSON []byte, projectID string) (*
 }
 
 func (m *googleCloudClient) GetMetrics() (int32, error) {
-	const timeWindow = 2
+	const timeWindow = 5 * time.Minute
 
-	startTime := time.Now().UTC().Add(-timeWindow * time.Minute)
+	startTime := time.Now().UTC().Add(-timeWindow)
 	endTime := time.Now().UTC()
 	request := &monitoringpb.ListTimeSeriesRequest{
 		Name:   "projects/" + m.projectID,
