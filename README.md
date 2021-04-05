@@ -7,8 +7,9 @@ This is a Kubernetes operator to autoscale Bigtable
 
 Tilt is tool to automate development cycle and has features like hot reloading.
 
-1. Install tilt (follow the [official instructions](https://docs.tilt.dev/install.html)). Make sure you create a kuberenetes cluster with ctlptl and kind as instructed.
-2. Execute `tilt up` to run the operator on your local cluster
+1. Install [kubebuilder](https://book.kubebuilder.io/quick-start.html#installation).
+2. Install tilt (follow the [official instructions](https://docs.tilt.dev/install.html)). Make sure you create a kuberenetes cluster with ctlptl and kind as instructed.
+3. Execute `tilt up` to run the operator on your local cluster.
 
 ### Option 2: Run manually
 
