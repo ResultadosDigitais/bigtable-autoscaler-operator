@@ -1,4 +1,4 @@
-package metrics
+package googlecloud
 
 import (
 	"context"
@@ -12,21 +12,21 @@ import (
 	monitoringpb "google.golang.org/genproto/googleapis/monitoring/v3"
 )
 
-type metricsClient struct {
+type googleCloudClient struct {
 	credentialsJSON []byte
 	projectID string
 }
 
-var _ MetricsClient = (*metricsClient)(nil)
+var _ GoogleCloudClient = (*googleCloudClient)(nil)
 
-func NewMetricsClient(credentialsJSON []byte, projectID string) (*metricsClient) {
-	return &metricsClient{
+func NewClient(credentialsJSON []byte, projectID string) (*googleCloudClient) {
+	return &googleCloudClient{
 		credentialsJSON: credentialsJSON,
 		projectID: projectID,
 	}
 }
 
-func (m *metricsClient) GetMetrics() (int32, error) {
+func (m *googleCloudClient) GetMetrics() (int32, error) {
 	ctx := context.Background()
 
 	client, err := monitoring.NewMetricClient(ctx, option.WithCredentialsJSON(m.credentialsJSON))

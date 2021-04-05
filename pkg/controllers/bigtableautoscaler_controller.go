@@ -37,7 +37,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	bigtablev1 "bigtable-autoscaler.com/m/v2/api/v1"
-	metrics "bigtable-autoscaler.com/m/v2/pkg/metrics"
+	"bigtable-autoscaler.com/m/v2/pkg/googlecloud"
 )
 
 // BigtableAutoscalerReconciler reconciles a BigtableAutoscaler object
@@ -248,7 +248,7 @@ func (r *BigtableAutoscalerReconciler) fetchMetrics(credentialsJSON []byte, name
 	eg.Go(func() error {
 		ticker := time.NewTicker(3 * time.Second)
 		var autoscaler *bigtablev1.BigtableAutoscaler
-		metricsClient := metrics.NewMetricsClient(credentialsJSON, "cdp-development")
+		googleCloudClient := googlecloud.NewClient(credentialsJSON, "cdp-development")
 
 		for {
 			select {
@@ -265,7 +265,7 @@ func (r *BigtableAutoscalerReconciler) fetchMetrics(credentialsJSON []byte, name
 					return nil
 				}
 
-				metric, err := metricsClient.GetMetrics()
+				metric, err := googleCloudClient.GetMetrics()
 
 				if err != nil {
 					r.Log.Error(err, "failed to get metrics")
@@ -285,7 +285,6 @@ func (r *BigtableAutoscalerReconciler) fetchMetrics(credentialsJSON []byte, name
 				}
 			}
 		}
-		return nil
 	})
 }
 
