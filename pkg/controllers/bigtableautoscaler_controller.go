@@ -248,6 +248,7 @@ func (r *BigtableAutoscalerReconciler) fetchMetrics(credentialsJSON []byte, name
 	eg.Go(func() error {
 		ticker := time.NewTicker(3 * time.Second)
 		var autoscaler *bigtablev1.BigtableAutoscaler
+		metricsClient := metrics.NewMetricsClient(credentialsJSON, "cdp-development")
 
 		for {
 			select {
@@ -264,7 +265,7 @@ func (r *BigtableAutoscalerReconciler) fetchMetrics(credentialsJSON []byte, name
 					return nil
 				}
 
-				metric, err := metrics.GetMetrics(credentialsJSON, "cdp-development")
+				metric, err := metricsClient.GetMetrics()
 
 				if err != nil {
 					r.Log.Error(err, "failed to get metrics")

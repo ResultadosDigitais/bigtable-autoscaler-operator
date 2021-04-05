@@ -12,19 +12,35 @@ import (
 	monitoringpb "google.golang.org/genproto/googleapis/monitoring/v3"
 )
 
-func GetMetrics(credentialsJSON []byte, projectID string) (int32, error) {
+type metricsClient struct {
+	credentialsJSON []byte
+	projectID string
+}
+
+var _ MetricsClient = (*metricsClient)(nil)
+
+func NewMetricsClient(credentialsJSON []byte, projectID string) (*metricsClient) {
+	return &metricsClient{
+		credentialsJSON: credentialsJSON,
+		projectID: projectID,
+	}
+}
+
+func (m *metricsClient) GetMetrics() (int32, error) {
 	ctx := context.Background()
 
-	client, err := monitoring.NewMetricClient(ctx, option.WithCredentialsJSON(credentialsJSON))
+	client, err := monitoring.NewMetricClient(ctx, option.WithCredentialsJSON(m.credentialsJSON))
 
 	if err != nil {
 		return -1, err
 	}
 
-	startTime := time.Now().UTC().Add(time.Minute * -20)
+	const timeWindow = 20
+
+	startTime := time.Now().UTC().Add(time.Minute * -timeWindow)
 	endTime := time.Now().UTC()
 	request := &monitoringpb.ListTimeSeriesRequest{
-		Name:   "projects/" + projectID,
+		Name:   "projects/" + m.projectID,
 		Filter: `metric.type="bigtable.googleapis.com/cluster/cpu_load"`,
 		Interval: &monitoringpb.TimeInterval{
 			StartTime: &timestamp.Timestamp{
