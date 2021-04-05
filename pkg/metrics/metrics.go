@@ -21,7 +21,7 @@ func GetMetrics(credentialsJSON []byte, projectID string) (int32, error) {
 		return -1, err
 	}
 
-	startTime := time.Now().UTC().Add(time.Minute * -20)
+	startTime := time.Now().UTC().Add(time.Minute * - 2)
 	endTime := time.Now().UTC()
 	request := &monitoringpb.ListTimeSeriesRequest{
 		Name:   "projects/" + projectID,
