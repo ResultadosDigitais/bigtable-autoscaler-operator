@@ -13,28 +13,28 @@ import (
 )
 
 type googleCloudClient struct {
-	credentialsJSON []byte
+	metricsClient *monitoring.MetricClient
 	projectID string
+	ctx context.Context
 }
 
 var _ GoogleCloudClient = (*googleCloudClient)(nil)
 
-func NewClient(credentialsJSON []byte, projectID string) (*googleCloudClient) {
-	return &googleCloudClient{
-		credentialsJSON: credentialsJSON,
-		projectID: projectID,
+func NewClient(ctx context.Context, credentialsJSON []byte, projectID string) (*googleCloudClient, error) {
+	client, err := monitoring.NewMetricClient(ctx, option.WithCredentialsJSON(credentialsJSON))
+
+	if err != nil {
+		return nil, err
 	}
+
+	return &googleCloudClient{
+		metricsClient: client,
+		projectID: projectID,
+		ctx: ctx,
+	}, nil
 }
 
 func (m *googleCloudClient) GetMetrics() (int32, error) {
-	ctx := context.Background()
-
-	client, err := monitoring.NewMetricClient(ctx, option.WithCredentialsJSON(m.credentialsJSON))
-
-	if err != nil {
-		return -1, err
-	}
-
 	const timeWindow = 2
 
 	startTime := time.Now().UTC().Add(-timeWindow * time.Minute)
@@ -52,7 +52,7 @@ func (m *googleCloudClient) GetMetrics() (int32, error) {
 		},
 	}
 
-	it := client.ListTimeSeries(ctx, request)
+	it := m.metricsClient.ListTimeSeries(m.ctx, request)
 
 	for {
 		resp, err := it.Next()

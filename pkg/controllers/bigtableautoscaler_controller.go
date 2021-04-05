@@ -248,7 +248,12 @@ func (r *BigtableAutoscalerReconciler) fetchMetrics(credentialsJSON []byte, name
 	eg.Go(func() error {
 		ticker := time.NewTicker(3 * time.Second)
 		var autoscaler *bigtablev1.BigtableAutoscaler
-		googleCloudClient := googlecloud.NewClient(credentialsJSON, "cdp-development")
+		googleCloudClient, err := googlecloud.NewClient(ctx, credentialsJSON, "cdp-development")
+
+		if err != nil {
+			r.Log.Error(err, "failed to initialize google cloud client")
+			return err
+		}
 
 		for {
 			select {
