@@ -35,9 +35,9 @@ func (m *metricsClient) GetMetrics() (int32, error) {
 		return -1, err
 	}
 
-	const timeWindow = 20
+	const timeWindow = 2
 
-	startTime := time.Now().UTC().Add(time.Minute * -timeWindow)
+	startTime := time.Now().UTC().Add(-timeWindow * time.Minute)
 	endTime := time.Now().UTC()
 	request := &monitoringpb.ListTimeSeriesRequest{
 		Name:   "projects/" + m.projectID,
