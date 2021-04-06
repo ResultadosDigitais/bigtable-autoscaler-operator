@@ -13,12 +13,13 @@ import (
 )
 
 type googleCloudClient struct {
-	metricsClient *monitoring.MetricClient
+	metricsClient MonitoringMetricClient
 	projectID string
 	ctx context.Context
 }
 
 var _ GoogleCloudClient = (*googleCloudClient)(nil)
+var _ MonitoringMetricClient = (*monitoring.MetricClient)(nil)
 
 func NewClient(ctx context.Context, credentialsJSON []byte, projectID string) (*googleCloudClient, error) {
 	client, err := monitoring.NewMetricClient(ctx, option.WithCredentialsJSON(credentialsJSON))
