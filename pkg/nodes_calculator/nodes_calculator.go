@@ -17,8 +17,6 @@ limitations under the License.
 package nodes_calculator
 
 import (
-	"math"
-
 	bigtablev1 "bigtable-autoscaler.com/m/v2/api/v1"
 )
 
@@ -31,8 +29,15 @@ func CalcDesiredNodes(status *bigtablev1.BigtableAutoscalerStatus, spec *bigtabl
 		desiredNodes = currentNodes - *spec.MaxScaleDownNodes
 	}
 
-	desiredNodes = int32(math.Max(float64(desiredNodes), float64(*spec.MinNodes)))
-	desiredNodes = int32(math.Min(float64(desiredNodes), float64(*spec.MaxNodes)))
+	return minMax(desiredNodes, *spec.MinNodes, *spec.MaxNodes)
+}
 
-	return desiredNodes
+func minMax(n int32, min int32, max int32) int32 {
+	if n < min {
+		return min
+	} else if n > max {
+		return max
+	} else {
+		return n
+	}
 }
