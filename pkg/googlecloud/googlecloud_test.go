@@ -2,21 +2,26 @@ package googlecloud
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"bigtable-autoscaler.com/m/v2/mocks"
-	"github.com/stretchr/testify/mock"
 	"bigtable-autoscaler.com/m/v2/pkg/interfaces"
+	"github.com/stretchr/testify/mock"
 )
 
 func Test_googleCloudClient_GetMetrics(t *testing.T) {
 
 	mockMetricsClientWrapper := mocks.MetricClientWrapper{}
 	mocksTimeSeriesIteratorWrapper := mocks.TimeSeriesIteratorWrapper{}
-
-	mockMetricsClientWrapper.On("ListTimeSeries", mock.Anything, mock.Anything).Return(&mocksTimeSeriesIteratorWrapper)
 	values := []int32{50, 45, 30}
 	mocksTimeSeriesIteratorWrapper.On("Points").Return(values, nil)
+	mockMetricsClientWrapper.On("ListTimeSeries", mock.Anything, mock.Anything).Return(&mocksTimeSeriesIteratorWrapper)
+
+	mockMetricsClientWrapperError := mocks.MetricClientWrapper{}
+	mocksTimeSeriesIteratorWrapperError := mocks.TimeSeriesIteratorWrapper{}
+	mocksTimeSeriesIteratorWrapperError.On("Points").Return(nil, errors.New("Failed to get metrics"))
+	mockMetricsClientWrapperError.On("ListTimeSeries", mock.Anything, mock.Anything).Return(&mocksTimeSeriesIteratorWrapperError)
 
 	type fields struct {
 		metricsClient interfaces.MetricClientWrapper
@@ -29,9 +34,8 @@ func Test_googleCloudClient_GetMetrics(t *testing.T) {
 		want    int32
 		wantErr bool
 	}{
-		// TODO: Add more test cases.
 		{
-			name: "a",
+			name: "returns the first value of the series",
 			fields: fields{
 				metricsClient: &mockMetricsClientWrapper,
 				projectID:     "my-project-id",
@@ -39,6 +43,16 @@ func Test_googleCloudClient_GetMetrics(t *testing.T) {
 			},
 			want:    50,
 			wantErr: false,
+		},
+		{
+			name: "raises error",
+			fields: fields{
+				metricsClient: &mockMetricsClientWrapperError,
+				projectID:     "my-project-id",
+				ctx:           context.Background(),
+			},
+			want:    -1,
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
