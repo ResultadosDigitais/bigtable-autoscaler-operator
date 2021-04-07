@@ -21,11 +21,12 @@ import (
 )
 
 func CalcDesiredNodes(status *bigtablev1.BigtableAutoscalerStatus, spec *bigtablev1.BigtableAutoscalerSpec) int32 {
-	totalCPU := *status.CurrentCPUUtilization * *status.CurrentNodes
-	desiredNodes := totalCPU / *spec.TargetCPUUtilization + 1 // roundup
+	currentNodes := *status.CurrentNodes
+	totalCPU := *status.CurrentCPUUtilization * currentNodes
+	desiredNodes := totalCPU / *spec.TargetCPUUtilization + 1
 
-	if (*status.CurrentNodes - desiredNodes) > *spec.MaxScaleDownNodes {
-		desiredNodes = *status.CurrentNodes - *spec.MaxScaleDownNodes
+	if (currentNodes - desiredNodes) > *spec.MaxScaleDownNodes {
+		desiredNodes = currentNodes - *spec.MaxScaleDownNodes
 	}
 
 	switch {
