@@ -65,12 +65,11 @@ func NewBigtableReconciler(
 	scheme *runtime.Scheme,
 ) *BigtableAutoscalerReconciler {
 
-
 	r := &BigtableAutoscalerReconciler{
-		Client:     Client,
-		APIReader:  apiReader,
-		Log:        ctrl.Log.WithName("controllers").WithName("BigtableAutoscaler"),
-		Scheme:     scheme,
+		Client:         Client,
+		APIReader:      apiReader,
+		Log:            ctrl.Log.WithName("controllers").WithName("BigtableAutoscaler"),
+		Scheme:         scheme,
 		fetcherStarted: false,
 	}
 
@@ -217,7 +216,7 @@ func (r *BigtableAutoscalerReconciler) getAutoscaler(namespacedName types.Namesp
 	return &autoscaler, nil
 }
 
-func scaleNodes(credentialsJSON []byte, projectID, instanceID, clusterID string, desiredNodes int32) (error) {
+func scaleNodes(credentialsJSON []byte, projectID, instanceID, clusterID string, desiredNodes int32) error {
 	ctx := context.Background()
 
 	client, err := bigtable.NewInstanceAdminClient(ctx, projectID, option.WithCredentialsJSON(credentialsJSON))
