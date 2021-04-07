@@ -290,7 +290,6 @@ func (r *BigtableAutoscalerReconciler) fetchMetrics(credentialsJSON []byte, name
 				}
 			}
 		}
-		return nil
 	})
 }
 
