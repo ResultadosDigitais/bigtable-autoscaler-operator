@@ -21,10 +21,10 @@ func TestCalcDesiredNodes(t *testing.T) {
 		maxScaleDown int32
 		expected     int32
 	}{
-		"scale up":       {currentNodes: 1, currentCPU: 100, minNodes: 1, maxNodes: 10, targetCPU: 50, maxScaleDown: 2, expected: 3},
-		"scale down":     {currentNodes: 10, currentCPU: 5, minNodes: 1, maxNodes: 10, targetCPU: 50, maxScaleDown: 10, expected: 2},
+		"scale up":       {currentNodes: 1, currentCPU: 100, minNodes: 1, maxNodes: 10, targetCPU: 50, maxScaleDown: 2, expected: 2},
+		"scale down":     {currentNodes: 10, currentCPU: 5, minNodes: 1, maxNodes: 10, targetCPU: 50, maxScaleDown: 10, expected: 1},
 		"max scale down": {currentNodes: 10, currentCPU: 5, minNodes: 1, maxNodes: 10, targetCPU: 50, maxScaleDown: 4, expected: 6},
-		"just perfect":   {currentNodes: 5, currentCPU: 50, minNodes: 1, maxNodes: 10, targetCPU: 50, maxScaleDown: 5, expected: 6},
+		"just perfect":   {currentNodes: 5, currentCPU: 50, minNodes: 1, maxNodes: 10, targetCPU: 50, maxScaleDown: 5, expected: 5},
 	}
 
 	for name, test := range tests {
