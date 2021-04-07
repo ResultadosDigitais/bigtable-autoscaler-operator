@@ -42,7 +42,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	bigtablev1 "bigtable-autoscaler.com/m/v2/api/v1"
-	"bigtable-autoscaler.com/m/v2/pkg/calculator"
+	"bigtable-autoscaler.com/m/v2/pkg/nodes_calculator"
 )
 
 // BigtableAutoscalerReconciler reconciles a BigtableAutoscaler object
@@ -124,7 +124,7 @@ func (r *BigtableAutoscalerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 		autoscaler.Status.CurrentCPUUtilization = &cpuUsage
 	}
 
-	desiredNodes := calculator.CalcDesiredNodes(&autoscaler.Status, &autoscaler.Spec)
+	desiredNodes := nodes_calculator.CalcDesiredNodes(&autoscaler.Status, &autoscaler.Spec)
 	autoscaler.Status.DesiredNodes = &desiredNodes
 
 	now := r.clock.Now()

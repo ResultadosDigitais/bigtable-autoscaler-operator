@@ -1,4 +1,4 @@
-package calculator
+package nodes_calculator
 
 import (
 	"testing"
