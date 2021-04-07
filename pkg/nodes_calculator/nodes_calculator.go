@@ -29,10 +29,10 @@ func CalcDesiredNodes(status *bigtablev1.BigtableAutoscalerStatus, spec *bigtabl
 		desiredNodes = currentNodes - *spec.MaxScaleDownNodes
 	}
 
-	return minMax(desiredNodes, *spec.MinNodes, *spec.MaxNodes)
+	return ensureLimits(desiredNodes, *spec.MinNodes, *spec.MaxNodes)
 }
 
-func minMax(n int32, min int32, max int32) int32 {
+func ensureLimits(n int32, min int32, max int32) int32 {
 	if n < min {
 		return min
 	} else if n > max {
