@@ -42,6 +42,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	bigtablev1 "bigtable-autoscaler.com/m/v2/api/v1"
+	"bigtable-autoscaler.com/m/v2/pkg/nodes_calculator"
 )
 
 // BigtableAutoscalerReconciler reconciles a BigtableAutoscaler object
@@ -64,12 +65,11 @@ func NewBigtableReconciler(
 	scheme *runtime.Scheme,
 ) *BigtableAutoscalerReconciler {
 
-
 	r := &BigtableAutoscalerReconciler{
-		Client:     Client,
-		APIReader:  apiReader,
-		Log:        ctrl.Log.WithName("controllers").WithName("BigtableAutoscaler"),
-		Scheme:     scheme,
+		Client:         Client,
+		APIReader:      apiReader,
+		Log:            ctrl.Log.WithName("controllers").WithName("BigtableAutoscaler"),
+		Scheme:         scheme,
 		fetcherStarted: false,
 	}
 
@@ -124,14 +124,7 @@ func (r *BigtableAutoscalerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 		autoscaler.Status.CurrentCPUUtilization = &cpuUsage
 	}
 
-	desiredNodes := calcDesiredNodes(
-		*autoscaler.Status.CurrentCPUUtilization,
-		*autoscaler.Status.CurrentNodes,
-		*autoscaler.Spec.TargetCPUUtilization,
-		*autoscaler.Spec.MinNodes,
-		*autoscaler.Spec.MaxNodes,
-		*autoscaler.Spec.MaxScaleDownNodes,
-	)
+	desiredNodes := nodes_calculator.CalcDesiredNodes(&autoscaler.Status, &autoscaler.Spec)
 	autoscaler.Status.DesiredNodes = &desiredNodes
 
 	now := r.clock.Now()
@@ -216,7 +209,7 @@ func (r *BigtableAutoscalerReconciler) getAutoscaler(namespacedName types.Namesp
 	return &autoscaler, nil
 }
 
-func scaleNodes(credentialsJSON []byte, projectID, instanceID, clusterID string, desiredNodes int32) (error) {
+func scaleNodes(credentialsJSON []byte, projectID, instanceID, clusterID string, desiredNodes int32) error {
 	ctx := context.Background()
 
 	client, err := bigtable.NewInstanceAdminClient(ctx, projectID, option.WithCredentialsJSON(credentialsJSON))
@@ -289,7 +282,6 @@ func (r *BigtableAutoscalerReconciler) fetchMetrics(credentialsJSON []byte, name
 				}
 			}
 		}
-		return nil
 	})
 }
 
@@ -363,26 +355,6 @@ func (r *BigtableAutoscalerReconciler) needUpdateNodes(currentNodes, desiredNode
 	default:
 		r.Log.Info("Should update nodes")
 		return true
-	}
-}
-
-func calcDesiredNodes(currentCPU, currentNodes, targetCPU, minNodes, maxNodes, maxScaleDownNodes int32) int32 {
-	totalCPU := currentCPU * currentNodes
-	desiredNodes := totalCPU/targetCPU + 1 // roundup
-
-	if (currentNodes - desiredNodes) > maxScaleDownNodes {
-		desiredNodes = currentNodes - maxScaleDownNodes
-	}
-
-	switch {
-	case desiredNodes < minNodes:
-		return minNodes
-
-	case desiredNodes > maxNodes:
-		return maxNodes
-
-	default:
-		return desiredNodes
 	}
 }
 
