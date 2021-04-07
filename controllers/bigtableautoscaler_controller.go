@@ -124,14 +124,7 @@ func (r *BigtableAutoscalerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 		autoscaler.Status.CurrentCPUUtilization = &cpuUsage
 	}
 
-	desiredNodes := calculator.CalcDesiredNodes(
-		*autoscaler.Status.CurrentCPUUtilization,
-		*autoscaler.Status.CurrentNodes,
-		*autoscaler.Spec.TargetCPUUtilization,
-		*autoscaler.Spec.MinNodes,
-		*autoscaler.Spec.MaxNodes,
-		*autoscaler.Spec.MaxScaleDownNodes,
-	)
+	desiredNodes := calculator.CalcDesiredNodes(&autoscaler.Status, &autoscaler.Spec)
 	autoscaler.Status.DesiredNodes = &desiredNodes
 
 	now := r.clock.Now()

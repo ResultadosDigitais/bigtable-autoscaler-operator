@@ -16,20 +16,24 @@ limitations under the License.
 
 package calculator
 
-func CalcDesiredNodes(currentCPU, currentNodes, targetCPU, minNodes, maxNodes, maxScaleDownNodes int32) int32 {
-	totalCPU := currentCPU * currentNodes
-	desiredNodes := totalCPU/targetCPU + 1 // roundup
+import (
+	bigtablev1 "bigtable-autoscaler.com/m/v2/api/v1"
+)
 
-	if (currentNodes - desiredNodes) > maxScaleDownNodes {
-		desiredNodes = currentNodes - maxScaleDownNodes
+func CalcDesiredNodes(status *bigtablev1.BigtableAutoscalerStatus, spec *bigtablev1.BigtableAutoscalerSpec) int32 {
+	totalCPU := *status.CurrentCPUUtilization * *status.CurrentNodes
+	desiredNodes := totalCPU / *spec.TargetCPUUtilization + 1 // roundup
+
+	if (*status.CurrentNodes - desiredNodes) > *spec.MaxScaleDownNodes {
+		desiredNodes = *status.CurrentNodes - *spec.MaxScaleDownNodes
 	}
 
 	switch {
-	case desiredNodes < minNodes:
-		return minNodes
+	case desiredNodes < *spec.MinNodes:
+		return *spec.MinNodes
 
-	case desiredNodes > maxNodes:
-		return maxNodes
+	case desiredNodes > *spec.MaxNodes:
+		return *spec.MaxNodes
 
 	default:
 		return desiredNodes
