@@ -2,38 +2,69 @@ package googlecloud
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"time"
 
 	monitoring "cloud.google.com/go/monitoring/apiv3"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
+
 	monitoringpb "google.golang.org/genproto/googleapis/monitoring/v3"
 )
 
+type metricClientWrapper struct {
+	metricsClient *monitoring.MetricClient
+}
+
+func (m *metricClientWrapper) NextMetric(ctx context.Context, req *monitoringpb.ListTimeSeriesRequest) (int32, error) {
+	it := m.metricsClient.ListTimeSeries(ctx, req)
+
+	return m.nextPoint(it)
+}
+
+func (m *metricClientWrapper) nextPoint(it *monitoring.TimeSeriesIterator) (int32, error) {
+	for {
+		resp, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return -1, err
+		}
+
+		points := resp.Points
+		return int32(points[0].GetValue().GetDoubleValue() * 100), nil
+	}
+	return -1, nil
+}
+
 type googleCloudClient struct {
-	metricsClient MonitoringMetricClient
+	metricsClient MetricClientWrapper
 	projectID string
 	ctx context.Context
 }
 
+var _ MetricClientWrapper = (*metricClientWrapper)(nil)
 var _ GoogleCloudClient = (*googleCloudClient)(nil)
-var _ MonitoringMetricClient = (*monitoring.MetricClient)(nil)
 
 func NewClient(ctx context.Context, credentialsJSON []byte, projectID string) (*googleCloudClient, error) {
 	client, err := monitoring.NewMetricClient(ctx, option.WithCredentialsJSON(credentialsJSON))
+	clientWrapped := metricClientWrapper{
+		metricsClient: client,
+	}
 
 	if err != nil {
 		return nil, err
 	}
 
 	return &googleCloudClient{
-		metricsClient: client,
+		metricsClient: &clientWrapped,
 		projectID: projectID,
 		ctx: ctx,
 	}, nil
 }
+
 
 func (m *googleCloudClient) GetMetrics() (int32, error) {
 	const timeWindow = 5 * time.Minute
@@ -53,24 +84,13 @@ func (m *googleCloudClient) GetMetrics() (int32, error) {
 		},
 	}
 
-	it := m.metricsClient.ListTimeSeries(m.ctx, request)
+	point, err := m.metricsClient.NextMetric(m.ctx, request)
 
-	for {
-		resp, err := it.Next()
-		if err == iterator.Done {
-			break
-		}
-		if err != nil {
-			return -1, err
-		}
-
-		points := resp.Points
-
-		if len(points) > 0 {
-			return int32(points[0].GetValue().GetDoubleValue() * 100), nil
-		}
-		return 0, errors.New("Empty metrics points")
+	if err != nil {
+		return -1, err
 	}
 
-	return -1, nil
+	fmt.Println("Olá3")
+
+	return point, nil
 }

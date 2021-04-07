@@ -5,13 +5,16 @@ import (
 	"testing"
 
 	"bigtable-autoscaler.com/m/v2/mocks"
+	"github.com/stretchr/testify/mock"
 )
 
 func Test_googleCloudClient_GetMetrics(t *testing.T) {
-    metricsClient := new(mocks.MonitoringMetricClient)
+	mockMetricsClientWrapper := mocks.MetricClientWrapper{}
+
+	mockMetricsClientWrapper.On("NextMetric", mock.Anything, mock.Anything).Return(int32(50), nil)
 
 	type fields struct {
-		metricsClient MonitoringMetricClient
+		metricsClient MetricClientWrapper
 		projectID     string
 		ctx           context.Context
 	}
@@ -21,15 +24,15 @@ func Test_googleCloudClient_GetMetrics(t *testing.T) {
 		want    int32
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		// TODO: Add more test cases.
 		{
 			name: "a",
 			fields: fields{
-				metricsClient: metricsClient,
+				metricsClient: &mockMetricsClientWrapper,
 				projectID:     "my-project-id",
 				ctx:           context.Background(),
 			},
-			want:    -1,
+			want:    50,
 			wantErr: false,
 		},
 	}
