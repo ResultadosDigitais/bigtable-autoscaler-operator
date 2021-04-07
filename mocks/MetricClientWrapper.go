@@ -5,6 +5,7 @@ package mocks
 import (
 	context "context"
 
+	interfaces "bigtable-autoscaler.com/m/v2/pkg/interfaces"
 	mock "github.com/stretchr/testify/mock"
 
 	monitoring "google.golang.org/genproto/googleapis/monitoring/v3"
@@ -15,23 +16,18 @@ type MetricClientWrapper struct {
 	mock.Mock
 }
 
-// NextMetric provides a mock function with given fields: ctx, req
-func (_m *MetricClientWrapper) NextMetric(ctx context.Context, req *monitoring.ListTimeSeriesRequest) (int32, error) {
+// ListTimeSeries provides a mock function with given fields: ctx, req
+func (_m *MetricClientWrapper) ListTimeSeries(ctx context.Context, req *monitoring.ListTimeSeriesRequest) interfaces.TimeSeriesIteratorWrapper {
 	ret := _m.Called(ctx, req)
 
-	var r0 int32
-	if rf, ok := ret.Get(0).(func(context.Context, *monitoring.ListTimeSeriesRequest) int32); ok {
+	var r0 interfaces.TimeSeriesIteratorWrapper
+	if rf, ok := ret.Get(0).(func(context.Context, *monitoring.ListTimeSeriesRequest) interfaces.TimeSeriesIteratorWrapper); ok {
 		r0 = rf(ctx, req)
 	} else {
-		r0 = ret.Get(0).(int32)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(interfaces.TimeSeriesIteratorWrapper)
+		}
 	}
 
-	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, *monitoring.ListTimeSeriesRequest) error); ok {
-		r1 = rf(ctx, req)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
+	return r0
 }

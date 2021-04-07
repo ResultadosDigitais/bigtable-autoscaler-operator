@@ -6,15 +6,20 @@ import (
 
 	"bigtable-autoscaler.com/m/v2/mocks"
 	"github.com/stretchr/testify/mock"
+	"bigtable-autoscaler.com/m/v2/pkg/interfaces"
 )
 
 func Test_googleCloudClient_GetMetrics(t *testing.T) {
-	mockMetricsClientWrapper := mocks.MetricClientWrapper{}
 
-	mockMetricsClientWrapper.On("NextMetric", mock.Anything, mock.Anything).Return(int32(50), nil)
+	mockMetricsClientWrapper := mocks.MetricClientWrapper{}
+	mocksTimeSeriesIteratorWrapper := mocks.TimeSeriesIteratorWrapper{}
+
+	mockMetricsClientWrapper.On("ListTimeSeries", mock.Anything, mock.Anything).Return(&mocksTimeSeriesIteratorWrapper)
+	values := []int32{50, 45, 30}
+	mocksTimeSeriesIteratorWrapper.On("Points").Return(values, nil)
 
 	type fields struct {
-		metricsClient MetricClientWrapper
+		metricsClient interfaces.MetricClientWrapper
 		projectID     string
 		ctx           context.Context
 	}

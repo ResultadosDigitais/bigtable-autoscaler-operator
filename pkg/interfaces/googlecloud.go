@@ -1,4 +1,4 @@
-package googlecloud
+package interfaces
 
 import (
 	"context"
@@ -11,5 +11,9 @@ type GoogleCloudClient interface {
 }
 
 type MetricClientWrapper interface {
-	NextMetric(ctx context.Context, req *monitoringpb.ListTimeSeriesRequest) (int32, error)
+	ListTimeSeries(ctx context.Context, req *monitoringpb.ListTimeSeriesRequest) TimeSeriesIteratorWrapper
+}
+
+type TimeSeriesIteratorWrapper interface {
+	Points() ([]int32, error)
 }

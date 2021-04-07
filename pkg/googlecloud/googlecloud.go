@@ -2,13 +2,13 @@ package googlecloud
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	monitoring "cloud.google.com/go/monitoring/apiv3"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
+	"bigtable-autoscaler.com/m/v2/pkg/interfaces"
 
 	monitoringpb "google.golang.org/genproto/googleapis/monitoring/v3"
 )
@@ -17,36 +17,46 @@ type metricClientWrapper struct {
 	metricsClient *monitoring.MetricClient
 }
 
-func (m *metricClientWrapper) NextMetric(ctx context.Context, req *monitoringpb.ListTimeSeriesRequest) (int32, error) {
-	it := m.metricsClient.ListTimeSeries(ctx, req)
-
-	return m.nextPoint(it)
+type timeSeriesIteratorWrapper struct {
+	iterator *monitoring.TimeSeriesIterator
 }
 
-func (m *metricClientWrapper) nextPoint(it *monitoring.TimeSeriesIterator) (int32, error) {
-	for {
-		resp, err := it.Next()
-		if err == iterator.Done {
-			break
-		}
-		if err != nil {
-			return -1, err
-		}
+func (w *timeSeriesIteratorWrapper) Points() ([]int32, error) {
+	ts, err := w.iterator.Next()
 
-		points := resp.Points
-		return int32(points[0].GetValue().GetDoubleValue() * 100), nil
+	if err != nil {
+		return nil, err
 	}
-	return -1, nil
+
+	normalized_points := make([]int32, 0)
+
+	for _, point := range ts.Points {
+		value := point.GetValue().GetDoubleValue() * 100
+		normalized_points = append(normalized_points, int32(value))
+	}
+
+	return normalized_points, nil
 }
+
+var _ interfaces.TimeSeriesIteratorWrapper = (*timeSeriesIteratorWrapper)(nil)
+
+func (w *metricClientWrapper) ListTimeSeries(ctx context.Context, req *monitoringpb.ListTimeSeriesRequest) interfaces.TimeSeriesIteratorWrapper {
+	it := w.metricsClient.ListTimeSeries(ctx, req)
+
+	ts := timeSeriesIteratorWrapper{iterator: it}
+
+	return &ts
+}
+
+var _ interfaces.MetricClientWrapper = (*metricClientWrapper)(nil)
 
 type googleCloudClient struct {
-	metricsClient MetricClientWrapper
-	projectID string
-	ctx context.Context
+	metricsClient interfaces.MetricClientWrapper
+	projectID     string
+	ctx           context.Context
 }
 
-var _ MetricClientWrapper = (*metricClientWrapper)(nil)
-var _ GoogleCloudClient = (*googleCloudClient)(nil)
+var _ interfaces.GoogleCloudClient = (*googleCloudClient)(nil)
 
 func NewClient(ctx context.Context, credentialsJSON []byte, projectID string) (*googleCloudClient, error) {
 	client, err := monitoring.NewMetricClient(ctx, option.WithCredentialsJSON(credentialsJSON))
@@ -60,11 +70,10 @@ func NewClient(ctx context.Context, credentialsJSON []byte, projectID string) (*
 
 	return &googleCloudClient{
 		metricsClient: &clientWrapped,
-		projectID: projectID,
-		ctx: ctx,
+		projectID:     projectID,
+		ctx:           ctx,
 	}, nil
 }
-
 
 func (m *googleCloudClient) GetMetrics() (int32, error) {
 	const timeWindow = 5 * time.Minute
@@ -84,13 +93,17 @@ func (m *googleCloudClient) GetMetrics() (int32, error) {
 		},
 	}
 
-	point, err := m.metricsClient.NextMetric(m.ctx, request)
+	it := m.metricsClient.ListTimeSeries(m.ctx, request)
 
-	if err != nil {
-		return -1, err
+	for {
+		points, err := it.Points()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return -1, err
+		}
+		return points[0], nil
 	}
-
-	fmt.Println("Olá3")
-
-	return point, nil
+	return -1, nil
 }
