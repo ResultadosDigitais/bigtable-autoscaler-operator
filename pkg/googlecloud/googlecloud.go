@@ -4,78 +4,57 @@ import (
 	"context"
 	"time"
 
+	"bigtable-autoscaler.com/m/v2/pkg/interfaces"
+	"cloud.google.com/go/bigtable"
 	monitoring "cloud.google.com/go/monitoring/apiv3"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
-	"bigtable-autoscaler.com/m/v2/pkg/interfaces"
 
 	monitoringpb "google.golang.org/genproto/googleapis/monitoring/v3"
 )
 
-type metricClientWrapper struct {
-	metricsClient *monitoring.MetricClient
-}
-
-type timeSeriesIteratorWrapper struct {
-	iterator *monitoring.TimeSeriesIterator
-}
-
-func (w *timeSeriesIteratorWrapper) Points() ([]int32, error) {
-	ts, err := w.iterator.Next()
-
-	if err != nil {
-		return nil, err
-	}
-
-	normalized_points := make([]int32, 0)
-
-	for _, point := range ts.Points {
-		value := point.GetValue().GetDoubleValue() * 100
-		normalized_points = append(normalized_points, int32(value))
-	}
-
-	return normalized_points, nil
-}
-
-var _ interfaces.TimeSeriesIteratorWrapper = (*timeSeriesIteratorWrapper)(nil)
-
-func (w *metricClientWrapper) ListTimeSeries(ctx context.Context, req *monitoringpb.ListTimeSeriesRequest) interfaces.TimeSeriesIteratorWrapper {
-	it := w.metricsClient.ListTimeSeries(ctx, req)
-
-	ts := timeSeriesIteratorWrapper{iterator: it}
-
-	return &ts
-}
-
-var _ interfaces.MetricClientWrapper = (*metricClientWrapper)(nil)
-
 type googleCloudClient struct {
 	metricsClient interfaces.MetricClientWrapper
+	bigtableClient interfaces.BigtableClientWrapper
 	projectID     string
+	instanceID     string
+	clusterID     string
 	ctx           context.Context
 }
 
+// Make sure the real implementation complies with its interface
 var _ interfaces.GoogleCloudClient = (*googleCloudClient)(nil)
 
-func NewClient(ctx context.Context, credentialsJSON []byte, projectID string) (*googleCloudClient, error) {
-	client, err := monitoring.NewMetricClient(ctx, option.WithCredentialsJSON(credentialsJSON))
-	clientWrapped := metricClientWrapper{
-		metricsClient: client,
+func NewClient(ctx context.Context, credentialsJSON []byte, projectID, instanceID, clusterID string) (*googleCloudClient, error) {
+	metricClient, err := monitoring.NewMetricClient(ctx, option.WithCredentialsJSON(credentialsJSON))
+	metricClientWrapped := metricClientWrapper{
+		metricsClient: metricClient,
 	}
-
 	if err != nil {
 		return nil, err
 	}
 
+	bigtableClient, err := bigtable.NewInstanceAdminClient(ctx, projectID, option.WithCredentialsJSON(credentialsJSON))
+	bigtableClientWrapped := bigtableClientWrapper{
+		bigtableClient: bigtableClient,
+	}
+	if err != nil {
+		return nil, err
+	}
+
+
 	return &googleCloudClient{
-		metricsClient: &clientWrapped,
+		metricsClient: &metricClientWrapped,
+		bigtableClient: &bigtableClientWrapped,
 		projectID:     projectID,
+		instanceID:    instanceID,
+		clusterID:    clusterID,
 		ctx:           ctx,
 	}, nil
 }
 
-func (m *googleCloudClient) GetMetrics() (int32, error) {
+func (m *googleCloudClient) GetLastCPUMeasure() (int32, error) {
 	const timeWindow = 5 * time.Minute
 
 	startTime := time.Now().UTC().Add(-timeWindow)
@@ -106,4 +85,13 @@ func (m *googleCloudClient) GetMetrics() (int32, error) {
 		return points[0], nil
 	}
 	return -1, nil
+}
+
+func (m *googleCloudClient) GetCurrentNodeCount() (int32, error) {
+	clusters, err := m.bigtableClient.Clusters(m.ctx, m.instanceID)
+	if err != nil {
+		return -1, err
+	}
+
+	return clusters.NodesOfInstance(m.clusterID)
 }

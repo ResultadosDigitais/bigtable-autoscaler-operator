@@ -7,7 +7,8 @@ import (
 )
 
 type GoogleCloudClient interface {
-	GetMetrics() (int32, error)
+	GetLastCPUMeasure() (int32, error)
+	GetCurrentNodeCount() (int32, error)
 }
 
 type MetricClientWrapper interface {
@@ -16,4 +17,12 @@ type MetricClientWrapper interface {
 
 type TimeSeriesIteratorWrapper interface {
 	Points() ([]int32, error)
+}
+
+type BigtableClientWrapper interface {
+	Clusters(ctx context.Context, instanceID string) (ClustersInfoWrapper, error)
+}
+
+type ClustersInfoWrapper interface {
+	NodesOfInstance(instanceID string) (int32, error)
 }

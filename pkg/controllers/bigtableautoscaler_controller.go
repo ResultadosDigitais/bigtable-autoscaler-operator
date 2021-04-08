@@ -97,14 +97,19 @@ func (r *BigtableAutoscalerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 		r.fetcherStarted = true
 	}
 
-	clusters, err := getClusters(credentialsJSON, "cdp-development", "clustering-engine")
+	googleCloudClient, err := googlecloud.NewClient(ctx, credentialsJSON, "cdp-development", "clustering-engine", "clustering-engine-c1")
+
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	currentNodes, err := googleCloudClient.GetCurrentNodeCount()
 
 	if err != nil {
 		r.Log.Error(err, "failed to get clusters")
 		return ctrl.Result{}, err
 	}
 
-	currentNodes := int32(clusters[0].ServeNodes)
 	autoscaler.Status.CurrentNodes = &currentNodes
 	r.Log.Info("Metric read", "node count", currentNodes)
 
@@ -223,22 +228,6 @@ func scaleNodes(credentialsJSON []byte, projectID, instanceID, clusterID string,
 	return client.UpdateCluster(ctx, instanceID, clusterID, desiredNodes)
 }
 
-func getClusters(credentialsJSON []byte, projectID, instanceID string) ([]*bigtable.ClusterInfo, error) {
-	ctx := context.Background()
-
-	client, err := bigtable.NewInstanceAdminClient(ctx, projectID, option.WithCredentialsJSON(credentialsJSON))
-
-	if err != nil {
-		return nil, err
-	}
-
-	clusters, err := client.Clusters(ctx, instanceID)
-	if err != nil {
-		return nil, err
-	}
-	return clusters, nil
-}
-
 func (r *BigtableAutoscalerReconciler) fetchMetrics(credentialsJSON []byte, namespacedName types.NamespacedName) {
 	ctx := context.Background()
 	eg, ctx := errgroup.WithContext(ctx)
@@ -248,7 +237,7 @@ func (r *BigtableAutoscalerReconciler) fetchMetrics(credentialsJSON []byte, name
 	eg.Go(func() error {
 		ticker := time.NewTicker(3 * time.Second)
 		var autoscaler *bigtablev1.BigtableAutoscaler
-		googleCloudClient, err := googlecloud.NewClient(ctx, credentialsJSON, "cdp-development")
+		googleCloudClient, err := googlecloud.NewClient(ctx, credentialsJSON, "cdp-development", "clustering-engine", "clustering-engine-c1")
 
 		if err != nil {
 			r.Log.Error(err, "failed to initialize google cloud client")
@@ -270,7 +259,7 @@ func (r *BigtableAutoscalerReconciler) fetchMetrics(credentialsJSON []byte, name
 					return nil
 				}
 
-				metric, err := googleCloudClient.GetMetrics()
+				metric, err := googleCloudClient.GetLastCPUMeasure()
 
 				if err != nil {
 					r.Log.Error(err, "failed to get metrics")
