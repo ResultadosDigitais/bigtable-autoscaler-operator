@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-func Test_googleCloudClient_GetLastCPUMeasure(t *testing.T) {
+func Test_googleCloudClient_GetCurrentCPULoad(t *testing.T) {
 	mockMetricsClientWrapper := mocks.MetricClientWrapper{}
 	mockTimeSeriesIteratorWrapper := mocks.TimeSeriesIteratorWrapper{}
 	values := []int32{50, 45, 30}
@@ -66,7 +66,7 @@ func Test_googleCloudClient_GetLastCPUMeasure(t *testing.T) {
 				instanceID:    tt.fields.instanceID,
 				ctx:           tt.fields.ctx,
 			}
-			got, err := m.GetLastCPUMeasure()
+			got, err := m.GetCurrentCPULoad()
 			if (err != nil) != tt.wantErr {
 				t.Errorf("googleCloudClient.GetMetrics() error = %v, wantErr %v", err, tt.wantErr)
 
@@ -83,14 +83,14 @@ func Test_googleCloudClient_GetCurrentNodeCount(t *testing.T) {
 	mockBigtableClientWrapper := mocks.BigtableClientWrapper{}
 	mockClusterInfoWrapper := mocks.ClusterInfoWrapper{}
 	clustersInfo := []interfaces.ClusterInfoWrapper{&mockClusterInfoWrapper}
-	mockClusterInfoWrapper.On("Name").Return("clustering-engine-c1")
+	mockClusterInfoWrapper.On("Name").Return("cluster-name-c1")
 	mockClusterInfoWrapper.On("ServerNodes").Return(int32(2))
 	mockBigtableClientWrapper.On("Clusters", mock.Anything, mock.Anything).Return(clustersInfo, nil)
 
 	mockBigtableClientWrapperError := mocks.BigtableClientWrapper{}
 	mockClusterInfoWrapperError := mocks.ClusterInfoWrapper{}
 	clustersInfoError := []interfaces.ClusterInfoWrapper{&mockClusterInfoWrapperError}
-	mockClusterInfoWrapperError.On("Name").Return("clustering-engine-c2")
+	mockClusterInfoWrapperError.On("Name").Return("cluster-name-c2")
 	mockBigtableClientWrapperError.On("Clusters", mock.Anything, mock.Anything).Return(clustersInfoError, nil)
 	type fields struct {
 		bigtableClient interfaces.BigtableClientWrapper
@@ -111,7 +111,7 @@ func Test_googleCloudClient_GetCurrentNodeCount(t *testing.T) {
 				bigtableClient: &mockBigtableClientWrapper,
 				projectID:      "my-project-id",
 				instanceID:     "my-instance-id",
-				clusterID:      "clustering-engine-c1",
+				clusterID:      "cluster-name-c1",
 				ctx:            context.Background(),
 			},
 			want:    2,
@@ -123,7 +123,7 @@ func Test_googleCloudClient_GetCurrentNodeCount(t *testing.T) {
 				bigtableClient: &mockBigtableClientWrapperError,
 				projectID:      "my-project-id",
 				instanceID:     "my-instance-id",
-				clusterID:      "clustering-engine-c1",
+				clusterID:      "cluster-name-c1",
 				ctx:            context.Background(),
 			},
 			want:    -1,

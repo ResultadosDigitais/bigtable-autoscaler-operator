@@ -54,6 +54,11 @@ make deploy
 kubectl -n bigtable-autoscaler-system logs $(kubectl -n bigtable-autoscaler-system get pods | tail -n1 | cut -d ' ' -f1) --all-containers
 ```
 
+## Running tests
+```sh
+go test ./... -v
+```
+
 # Usage
 
 #### Apply some autoscaler

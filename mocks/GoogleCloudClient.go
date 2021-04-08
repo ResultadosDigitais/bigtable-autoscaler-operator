@@ -30,8 +30,8 @@ func (_m *GoogleCloudClient) GetCurrentNodeCount() (int32, error) {
 	return r0, r1
 }
 
-// GetLastCPUMeasure provides a mock function with given fields:
-func (_m *GoogleCloudClient) GetLastCPUMeasure() (int32, error) {
+// GetCurrentCPULoad provides a mock function with given fields:
+func (_m *GoogleCloudClient) GetCurrentCPULoad() (int32, error) {
 	ret := _m.Called()
 
 	var r0 int32

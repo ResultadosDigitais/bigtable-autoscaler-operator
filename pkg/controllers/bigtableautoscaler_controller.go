@@ -253,7 +253,7 @@ func (r *BigtableAutoscalerReconciler) fetchMetrics(credentialsJSON []byte, name
 					return nil
 				}
 
-				metric, err := googleCloudClient.GetLastCPUMeasure()
+				metric, err := googleCloudClient.GetCurrentCPULoad()
 
 				if err != nil {
 					r.Log.Error(err, "failed to get metrics")

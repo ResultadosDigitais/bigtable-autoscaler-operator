@@ -7,7 +7,7 @@ import (
 )
 
 type GoogleCloudClient interface {
-	GetLastCPUMeasure() (int32, error)
+	GetCurrentCPULoad() (int32, error)
 	GetCurrentNodeCount() (int32, error)
 }
 
