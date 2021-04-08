@@ -7,8 +7,10 @@ require (
 	cloud.google.com/go/bigtable v1.8.0
 	github.com/go-logr/logr v0.1.0
 	github.com/golang/protobuf v1.5.1
+	github.com/googleapis/gax-go/v2 v2.0.5
 	github.com/onsi/ginkgo v1.11.0
 	github.com/onsi/gomega v1.8.1
+	github.com/stretchr/testify v1.6.1
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	google.golang.org/api v0.43.0
 	google.golang.org/genproto v0.0.0-20210325141258-5636347f2b14

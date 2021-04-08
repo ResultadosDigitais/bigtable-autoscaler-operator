@@ -23,12 +23,7 @@ import (
 
 	"github.com/go-logr/logr"
 	"golang.org/x/sync/errgroup"
-
-	monitoring "cloud.google.com/go/monitoring/apiv3"
-	"github.com/golang/protobuf/ptypes/timestamp"
-	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
-	monitoringpb "google.golang.org/genproto/googleapis/monitoring/v3"
 
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -42,6 +37,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	bigtablev1 "bigtable-autoscaler.com/m/v2/api/v1"
+	"bigtable-autoscaler.com/m/v2/pkg/googlecloud"
 	"bigtable-autoscaler.com/m/v2/pkg/nodes_calculator"
 )
 
@@ -102,18 +98,23 @@ func (r *BigtableAutoscalerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 		r.fetcherStarted = true
 	}
 
-	clusters, err := getClusters(credentialsJSON, "cdp-development", "clustering-engine")
+	googleCloudClient, err := googlecloud.NewClient(ctx, credentialsJSON, "cdp-development", "clustering-engine")
+
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	currentNodes, err := googleCloudClient.GetCurrentNodeCount("clustering-engine-c1")
 
 	if err != nil {
 		r.Log.Error(err, "failed to get clusters")
 		return ctrl.Result{}, err
 	}
 
-	currentNodes := int32(clusters[0].ServeNodes)
 	autoscaler.Status.CurrentNodes = &currentNodes
 	r.Log.Info("Metric read", "node count", currentNodes)
 
-	var defaultMaxScaleDownNodes int32 = 1
+	var defaultMaxScaleDownNodes int32 = 2
 
 	if autoscaler.Spec.MaxScaleDownNodes == nil || *autoscaler.Spec.MaxScaleDownNodes == 0 {
 		autoscaler.Spec.MaxScaleDownNodes = &defaultMaxScaleDownNodes
@@ -221,22 +222,6 @@ func scaleNodes(credentialsJSON []byte, projectID, instanceID, clusterID string,
 	return client.UpdateCluster(ctx, instanceID, clusterID, desiredNodes)
 }
 
-func getClusters(credentialsJSON []byte, projectID, instanceID string) ([]*bigtable.ClusterInfo, error) {
-	ctx := context.Background()
-
-	client, err := bigtable.NewInstanceAdminClient(ctx, projectID, option.WithCredentialsJSON(credentialsJSON))
-
-	if err != nil {
-		return nil, err
-	}
-
-	clusters, err := client.Clusters(ctx, instanceID)
-	if err != nil {
-		return nil, err
-	}
-	return clusters, nil
-}
-
 func (r *BigtableAutoscalerReconciler) fetchMetrics(credentialsJSON []byte, namespacedName types.NamespacedName) {
 	ctx := context.Background()
 	eg, ctx := errgroup.WithContext(ctx)
@@ -246,6 +231,12 @@ func (r *BigtableAutoscalerReconciler) fetchMetrics(credentialsJSON []byte, name
 	eg.Go(func() error {
 		ticker := time.NewTicker(3 * time.Second)
 		var autoscaler *bigtablev1.BigtableAutoscaler
+		googleCloudClient, err := googlecloud.NewClient(ctx, credentialsJSON, "cdp-development", "clustering-engine")
+
+		if err != nil {
+			r.Log.Error(err, "failed to initialize google cloud client")
+			return err
+		}
 
 		for {
 			select {
@@ -262,7 +253,7 @@ func (r *BigtableAutoscalerReconciler) fetchMetrics(credentialsJSON []byte, name
 					return nil
 				}
 
-				metric, err := getMetrics(credentialsJSON, "cdp-development")
+				metric, err := googleCloudClient.GetCurrentCPULoad()
 
 				if err != nil {
 					r.Log.Error(err, "failed to get metrics")
@@ -283,48 +274,6 @@ func (r *BigtableAutoscalerReconciler) fetchMetrics(credentialsJSON []byte, name
 			}
 		}
 	})
-}
-
-func getMetrics(credentialsJSON []byte, projectID string) (int32, error) {
-	ctx := context.Background()
-
-	client, err := monitoring.NewMetricClient(ctx, option.WithCredentialsJSON(credentialsJSON))
-
-	if err != nil {
-		return -1, err
-	}
-
-	startTime := time.Now().UTC().Add(time.Minute * -20)
-	endTime := time.Now().UTC()
-	request := &monitoringpb.ListTimeSeriesRequest{
-		Name:   "projects/" + projectID,
-		Filter: `metric.type="bigtable.googleapis.com/cluster/cpu_load"`,
-		Interval: &monitoringpb.TimeInterval{
-			StartTime: &timestamp.Timestamp{
-				Seconds: startTime.Unix(),
-			},
-			EndTime: &timestamp.Timestamp{
-				Seconds: endTime.Unix(),
-			},
-		},
-	}
-
-	it := client.ListTimeSeries(ctx, request)
-
-	for {
-		resp, err := it.Next()
-		if err == iterator.Done {
-			break
-		}
-		if err != nil {
-			return -1, err
-		}
-
-		points := resp.Points
-		return int32(points[0].GetValue().GetDoubleValue() * 100), nil
-	}
-
-	return -1, nil
 }
 
 func (r *BigtableAutoscalerReconciler) needUpdateNodes(currentNodes, desiredNodes int32, lastScaleTime metav1.Time, now time.Time) bool {

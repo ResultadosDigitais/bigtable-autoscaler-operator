@@ -27,7 +27,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	bigtablev1 "bigtable-autoscaler.com/m/v2/api/v1"
-	"bigtable-autoscaler.com/m/v2/controllers"
+	"bigtable-autoscaler.com/m/v2/pkg/controllers"
 	// +kubebuilder:scaffold:imports
 )
 
