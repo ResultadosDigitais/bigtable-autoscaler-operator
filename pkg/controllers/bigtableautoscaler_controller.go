@@ -22,7 +22,6 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
-	"golang.org/x/sync/errgroup"
 	"google.golang.org/api/option"
 
 	corev1 "k8s.io/api/core/v1"
@@ -39,6 +38,7 @@ import (
 	bigtablev1 "bigtable-autoscaler.com/m/v2/api/v1"
 	"bigtable-autoscaler.com/m/v2/pkg/googlecloud"
 	"bigtable-autoscaler.com/m/v2/pkg/nodes_calculator"
+	"bigtable-autoscaler.com/m/v2/pkg/status_syncer"
 )
 
 // BigtableAutoscalerReconciler reconciles a BigtableAutoscaler object
@@ -93,16 +93,20 @@ func (r *BigtableAutoscalerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 		return ctrl.Result{}, err
 	}
 
-	if !r.fetcherStarted {
-		r.fetchMetrics(credentialsJSON, req.NamespacedName)
-		r.fetcherStarted = true
-	}
-
 	googleCloudClient, err := googlecloud.NewClient(ctx, credentialsJSON, "cdp-development", "clustering-engine")
-
 	if err != nil {
 		return ctrl.Result{}, err
 	}
+
+	if !r.fetcherStarted {
+		statusSyncer, err := status_syncer.NewStatusSyncer(r.Client, *autoscaler, googleCloudClient, "clustering-engine-c1", ctx, r.Log)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+		statusSyncer.SyncStatus()
+		r.fetcherStarted = true
+	}
+
 
 	currentNodes, err := googleCloudClient.GetCurrentNodeCount("clustering-engine-c1")
 
@@ -220,60 +224,6 @@ func scaleNodes(credentialsJSON []byte, projectID, instanceID, clusterID string,
 	}
 
 	return client.UpdateCluster(ctx, instanceID, clusterID, desiredNodes)
-}
-
-func (r *BigtableAutoscalerReconciler) fetchMetrics(credentialsJSON []byte, namespacedName types.NamespacedName) {
-	ctx := context.Background()
-	eg, ctx := errgroup.WithContext(ctx)
-
-	const optimisticLockErrorMsg = "the object has been modified; please apply your changes to the latest version and try again"
-
-	eg.Go(func() error {
-		ticker := time.NewTicker(3 * time.Second)
-		var autoscaler *bigtablev1.BigtableAutoscaler
-		googleCloudClient, err := googlecloud.NewClient(ctx, credentialsJSON, "cdp-development", "clustering-engine")
-
-		if err != nil {
-			r.Log.Error(err, "failed to initialize google cloud client")
-			return err
-		}
-
-		for {
-			select {
-			case <-ticker.C:
-				var err error
-				autoscaler, err = r.getAutoscaler(namespacedName)
-				if err != nil {
-					err = ctrlclient.IgnoreNotFound(err)
-					if err != nil {
-						r.Log.Error(err, "failed to get bigtable-autoscaler")
-						return err
-					}
-
-					return nil
-				}
-
-				metric, err := googleCloudClient.GetCurrentCPULoad()
-
-				if err != nil {
-					r.Log.Error(err, "failed to get metrics")
-					return err
-				}
-
-				r.Log.V(1).Info("Metric read", "cpu utilization", metric)
-				autoscaler.Status.CurrentCPUUtilization = &metric
-
-				if err = r.Client.Status().Update(ctx, autoscaler); err != nil {
-					if strings.Contains(err.Error(), optimisticLockErrorMsg) {
-						r.Log.Info("opsi, temos um problema de concorrencia")
-						continue
-					}
-					r.Log.Error(err, "failed to update autoscaler status")
-					return err
-				}
-			}
-		}
-	})
 }
 
 func (r *BigtableAutoscalerReconciler) needUpdateNodes(currentNodes, desiredNodes int32, lastScaleTime metav1.Time, now time.Time) bool {
