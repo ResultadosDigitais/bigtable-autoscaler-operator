@@ -2,6 +2,7 @@ package googlecloud
 
 import (
 	"context"
+	"fmt"
 
 	"bigtable-autoscaler.com/m/v2/pkg/interfaces"
 	monitoring "cloud.google.com/go/monitoring/apiv3"
@@ -20,17 +21,17 @@ func (w *timeSeriesIteratorWrapper) Points() ([]int32, error) {
 	ts, err := w.iterator.Next()
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Failed to iterate over time series: %v", err)
 	}
 
-	normalized_points := make([]int32, 0)
+	normalizePoints := make([]int32, 0)
 
 	for _, point := range ts.Points {
 		value := point.GetValue().GetDoubleValue() * 100
-		normalized_points = append(normalized_points, int32(value))
+		normalizePoints = append(normalizePoints, int32(value))
 	}
 
-	return normalized_points, nil
+	return normalizePoints, nil
 }
 
 // Make sure the wrapper complies with its interface

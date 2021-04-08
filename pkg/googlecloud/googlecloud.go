@@ -25,24 +25,24 @@ type googleCloudClient struct {
 	ctx            context.Context
 }
 
-// Make sure the real implementation complies with its interface
+// Make sure the real implementation complies with its interface.
 var _ interfaces.GoogleCloudClient = (*googleCloudClient)(nil)
 
 func NewClient(ctx context.Context, credentialsJSON []byte, projectID, instanceID, clusterID string) (*googleCloudClient, error) {
 	metricClient, err := monitoring.NewMetricClient(ctx, option.WithCredentialsJSON(credentialsJSON))
+	if err != nil {
+		return nil, fmt.Errorf("Failed to create metrics client: %v", err)
+	}
 	metricClientWrapped := metricClientWrapper{
 		metricsClient: metricClient,
 	}
-	if err != nil {
-		return nil, err
-	}
 
 	bigtableClient, err := bigtable.NewInstanceAdminClient(ctx, projectID, option.WithCredentialsJSON(credentialsJSON))
+	if err != nil {
+		return nil, fmt.Errorf("Failed to create bigtable client: %v", err)
+	}
 	bigtableClientWrapped := bigtableClientWrapper{
 		bigtableClient: bigtableClient,
-	}
-	if err != nil {
-		return nil, err
 	}
 
 	return &googleCloudClient{
@@ -81,7 +81,7 @@ func (m *googleCloudClient) GetLastCPUMeasure() (int32, error) {
 			break
 		}
 		if err != nil {
-			return -1, err
+			return -1, fmt.Errorf("Failed get points data from time series: %v", err)
 		}
 		return points[0], nil
 	}
@@ -91,12 +91,12 @@ func (m *googleCloudClient) GetLastCPUMeasure() (int32, error) {
 func (m *googleCloudClient) GetCurrentNodeCount() (int32, error) {
 	clustersInfo, err := m.bigtableClient.Clusters(m.ctx, m.instanceID)
 	if err != nil {
-		return -1, err
+		return -1, fmt.Errorf("Failed to get clusters info: %v", err)
 	}
 
 	for _, clusterInfo := range clustersInfo {
 		if clusterInfo.Name() == m.clusterID {
-			return int32(clusterInfo.ServerNodes()), nil
+			return clusterInfo.ServerNodes(), nil
 		}
 	}
 	message := fmt.Sprintf("Cluster of id %s not found", m.clusterID)

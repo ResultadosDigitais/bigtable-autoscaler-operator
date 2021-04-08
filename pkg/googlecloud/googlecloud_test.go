@@ -67,6 +67,7 @@ func Test_googleCloudClient_GetLastCPUMeasure(t *testing.T) {
 			got, err := m.GetLastCPUMeasure()
 			if (err != nil) != tt.wantErr {
 				t.Errorf("googleCloudClient.GetMetrics() error = %v, wantErr %v", err, tt.wantErr)
+
 				return
 			}
 			if got != tt.want {
@@ -139,6 +140,7 @@ func Test_googleCloudClient_GetCurrentNodeCount(t *testing.T) {
 			got, err := m.GetCurrentNodeCount()
 			if (err != nil) != tt.wantErr {
 				t.Errorf("googleCloudClient.GetCurrentNodeCount() error = %v, wantErr %v", err, tt.wantErr)
+
 				return
 			}
 			if got != tt.want {
