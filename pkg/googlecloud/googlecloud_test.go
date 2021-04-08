@@ -19,8 +19,9 @@ func Test_googleCloudClient_GetLastCPUMeasure(t *testing.T) {
 
 	mockMetricsClientWrapperError := mocks.MetricClientWrapper{}
 	mockTimeSeriesIteratorWrapperError := mocks.TimeSeriesIteratorWrapper{}
-	mockTimeSeriesIteratorWrapperError.On("Points").Return(nil, errors.New("Failed to get metrics"))
-	mockMetricsClientWrapperError.On("ListTimeSeries", mock.Anything, mock.Anything).Return(&mockTimeSeriesIteratorWrapperError)
+	mockTimeSeriesIteratorWrapperError.On("Points").Return(nil, errors.New("failed to get metrics"))
+	mockMetricsClientWrapperError.On("ListTimeSeries", mock.Anything, mock.Anything).
+		Return(&mockTimeSeriesIteratorWrapperError)
 
 	type fields struct {
 		metricsClient interfaces.MetricClientWrapper

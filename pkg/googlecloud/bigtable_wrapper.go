@@ -27,10 +27,12 @@ func (c *clusterInfoWrapper) ServerNodes() int32 {
 // Make sure the wrapper complies with its interface.
 var _ interfaces.ClusterInfoWrapper = (*clusterInfoWrapper)(nil)
 
-func (b *bigtableClientWrapper) Clusters(ctx context.Context, instanceID string) ([]interfaces.ClusterInfoWrapper, error) {
+func (b *bigtableClientWrapper) Clusters(
+	ctx context.Context, instanceID string,
+) ([]interfaces.ClusterInfoWrapper, error) {
 	clustersInfo, err := b.bigtableClient.Clusters(ctx, instanceID)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to find clusters info for instanceID %s: %v", instanceID, err)
+		return nil, fmt.Errorf("failed to find clusters info for instanceID %s: %w", instanceID, err)
 	}
 
 	clustersInfoWrapped := []interfaces.ClusterInfoWrapper{}

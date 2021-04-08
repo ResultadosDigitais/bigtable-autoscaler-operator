@@ -25,13 +25,10 @@ type googleCloudClient struct {
 	ctx            context.Context
 }
 
-// Make sure the real implementation complies with its interface.
-var _ interfaces.GoogleCloudClient = (*googleCloudClient)(nil)
-
-func NewClient(ctx context.Context, credentialsJSON []byte, projectID, instanceID, clusterID string) (*googleCloudClient, error) {
+func NewClient(ctx context.Context, credentialsJSON []byte, projectID, instanceID, clusterID string) (interfaces.GoogleCloudClient, error) {
 	metricClient, err := monitoring.NewMetricClient(ctx, option.WithCredentialsJSON(credentialsJSON))
 	if err != nil {
-		return nil, fmt.Errorf("Failed to create metrics client: %v", err)
+		return nil, fmt.Errorf("failed to create metrics client: %w", err)
 	}
 	metricClientWrapped := metricClientWrapper{
 		metricsClient: metricClient,
@@ -39,7 +36,7 @@ func NewClient(ctx context.Context, credentialsJSON []byte, projectID, instanceI
 
 	bigtableClient, err := bigtable.NewInstanceAdminClient(ctx, projectID, option.WithCredentialsJSON(credentialsJSON))
 	if err != nil {
-		return nil, fmt.Errorf("Failed to create bigtable client: %v", err)
+		return nil, fmt.Errorf("failed to create bigtable client: %w", err)
 	}
 	bigtableClientWrapped := bigtableClientWrapper{
 		bigtableClient: bigtableClient,
@@ -81,7 +78,7 @@ func (m *googleCloudClient) GetLastCPUMeasure() (int32, error) {
 			break
 		}
 		if err != nil {
-			return -1, fmt.Errorf("Failed get points data from time series: %v", err)
+			return -1, fmt.Errorf("failed get points data from time series: %w", err)
 		}
 		return points[0], nil
 	}
@@ -91,7 +88,7 @@ func (m *googleCloudClient) GetLastCPUMeasure() (int32, error) {
 func (m *googleCloudClient) GetCurrentNodeCount() (int32, error) {
 	clustersInfo, err := m.bigtableClient.Clusters(m.ctx, m.instanceID)
 	if err != nil {
-		return -1, fmt.Errorf("Failed to get clusters info: %v", err)
+		return -1, fmt.Errorf("failed to get clusters info: %w", err)
 	}
 
 	for _, clusterInfo := range clustersInfo {
@@ -102,3 +99,6 @@ func (m *googleCloudClient) GetCurrentNodeCount() (int32, error) {
 	message := fmt.Sprintf("Cluster of id %s not found", m.clusterID)
 	return -1, errors.New(message)
 }
+
+// Make sure the real implementation complies with its interface.
+var _ interfaces.GoogleCloudClient = (*googleCloudClient)(nil)

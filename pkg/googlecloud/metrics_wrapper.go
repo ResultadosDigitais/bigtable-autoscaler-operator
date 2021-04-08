@@ -18,26 +18,29 @@ type timeSeriesIteratorWrapper struct {
 }
 
 func (w *timeSeriesIteratorWrapper) Points() ([]int32, error) {
+	const percent float64 = 100
 	ts, err := w.iterator.Next()
 
 	if err != nil {
-		return nil, fmt.Errorf("Failed to iterate over time series: %v", err)
+		return nil, fmt.Errorf("failed to iterate over time series: %w", err)
 	}
 
 	normalizePoints := make([]int32, 0)
 
 	for _, point := range ts.Points {
-		value := point.GetValue().GetDoubleValue() * 100
+		value := point.GetValue().GetDoubleValue() * percent
 		normalizePoints = append(normalizePoints, int32(value))
 	}
 
 	return normalizePoints, nil
 }
 
-// Make sure the wrapper complies with its interface
+// Make sure the wrapper complies with its interface.
 var _ interfaces.TimeSeriesIteratorWrapper = (*timeSeriesIteratorWrapper)(nil)
 
-func (w *metricClientWrapper) ListTimeSeries(ctx context.Context, req *monitoringpb.ListTimeSeriesRequest) interfaces.TimeSeriesIteratorWrapper {
+func (w *metricClientWrapper) ListTimeSeries(
+	ctx context.Context, req *monitoringpb.ListTimeSeriesRequest,
+) interfaces.TimeSeriesIteratorWrapper {
 	it := w.metricsClient.ListTimeSeries(ctx, req)
 
 	ts := timeSeriesIteratorWrapper{iterator: it}
@@ -45,5 +48,5 @@ func (w *metricClientWrapper) ListTimeSeries(ctx context.Context, req *monitorin
 	return &ts
 }
 
-// Make sure the wrapper complies with its interface
+// Make sure the wrapper complies with its interface.
 var _ interfaces.MetricClientWrapper = (*metricClientWrapper)(nil)
