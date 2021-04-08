@@ -9,8 +9,29 @@ type GoogleCloudClient struct {
 	mock.Mock
 }
 
-// GetMetrics provides a mock function with given fields:
-func (_m *GoogleCloudClient) GetMetrics() (int32, error) {
+// GetCurrentNodeCount provides a mock function with given fields:
+func (_m *GoogleCloudClient) GetCurrentNodeCount() (int32, error) {
+	ret := _m.Called()
+
+	var r0 int32
+	if rf, ok := ret.Get(0).(func() int32); ok {
+		r0 = rf()
+	} else {
+		r0 = ret.Get(0).(int32)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func() error); ok {
+		r1 = rf()
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetLastCPUMeasure provides a mock function with given fields:
+func (_m *GoogleCloudClient) GetLastCPUMeasure() (int32, error) {
 	ret := _m.Called()
 
 	var r0 int32

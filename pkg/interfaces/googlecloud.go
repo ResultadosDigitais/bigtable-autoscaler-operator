@@ -20,9 +20,10 @@ type TimeSeriesIteratorWrapper interface {
 }
 
 type BigtableClientWrapper interface {
-	Clusters(ctx context.Context, instanceID string) (ClustersInfoWrapper, error)
+	Clusters(ctx context.Context, instanceID string) ([]ClusterInfoWrapper, error)
 }
 
-type ClustersInfoWrapper interface {
-	NodesOfInstance(instanceID string) (int32, error)
+type ClusterInfoWrapper interface {
+	Name() (string)
+	ServerNodes() (int32)
 }

@@ -2,8 +2,6 @@ package googlecloud
 
 import (
 	"context"
-	"errors"
-	"fmt"
 
 	"bigtable-autoscaler.com/m/v2/pkg/interfaces"
 	"cloud.google.com/go/bigtable"
@@ -13,34 +11,38 @@ type bigtableClientWrapper struct {
 	bigtableClient *bigtable.InstanceAdminClient
 }
 
-type clustersInfoWrapper struct {
-	clustersInfo []*bigtable.ClusterInfo
+type clusterInfoWrapper struct {
+	clusterInfo *bigtable.ClusterInfo
+}
+func (c *clusterInfoWrapper) Name() (string) {
+	return c.clusterInfo.Name
 }
 
-func (c *clustersInfoWrapper) NodesOfInstance(clusterID string) (int32, error) {
-	for _, clusterInfo := range c.clustersInfo {
-		if clusterInfo.Name == clusterID {
-			return int32(clusterInfo.ServeNodes), nil
-		}
-	}
-	message := fmt.Sprintf("Cluster of id %s not found", clusterID)
-	return -1, errors.New(message)
+func (c *clusterInfoWrapper) ServerNodes() (int32) {
+	return int32(c.clusterInfo.ServeNodes)
 }
 
 // Make sure the wrapper complies with its interface
-var _ interfaces.ClustersInfoWrapper = (*clustersInfoWrapper)(nil)
+var _ interfaces.ClusterInfoWrapper = (*clusterInfoWrapper)(nil)
 
-func (b *bigtableClientWrapper) Clusters(ctx context.Context, instanceID string) (interfaces.ClustersInfoWrapper, error) {
+func (b *bigtableClientWrapper) Clusters(ctx context.Context, instanceID string) ([]interfaces.ClusterInfoWrapper, error) {
 	clustersInfo, err := b.bigtableClient.Clusters(ctx, instanceID)
 	if err != nil {
 		return nil, err
 	}
 
-	clustersInfoWrapped := clustersInfoWrapper{
-		clustersInfo: clustersInfo,
+	clustersInfoWrapped := []interfaces.ClusterInfoWrapper{}
+
+	for _, clusterInfo := range clustersInfo {
+		clusterInfoWrapped := clusterInfoWrapper{
+			clusterInfo: clusterInfo,
+		}
+
+		clustersInfoWrapped = append(clustersInfoWrapped, &clusterInfoWrapped)
 	}
 
-	return &clustersInfoWrapped, nil
+
+	return clustersInfoWrapped, nil
 }
 
 // Make sure the wrapper complies with its interface

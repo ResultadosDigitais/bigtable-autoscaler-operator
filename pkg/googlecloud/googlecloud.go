@@ -2,6 +2,8 @@ package googlecloud
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"time"
 
 	"bigtable-autoscaler.com/m/v2/pkg/interfaces"
@@ -15,12 +17,12 @@ import (
 )
 
 type googleCloudClient struct {
-	metricsClient interfaces.MetricClientWrapper
+	metricsClient  interfaces.MetricClientWrapper
 	bigtableClient interfaces.BigtableClientWrapper
-	projectID     string
+	projectID      string
 	instanceID     string
-	clusterID     string
-	ctx           context.Context
+	clusterID      string
+	ctx            context.Context
 }
 
 // Make sure the real implementation complies with its interface
@@ -43,14 +45,13 @@ func NewClient(ctx context.Context, credentialsJSON []byte, projectID, instanceI
 		return nil, err
 	}
 
-
 	return &googleCloudClient{
-		metricsClient: &metricClientWrapped,
+		metricsClient:  &metricClientWrapped,
 		bigtableClient: &bigtableClientWrapped,
-		projectID:     projectID,
-		instanceID:    instanceID,
-		clusterID:    clusterID,
-		ctx:           ctx,
+		projectID:      projectID,
+		instanceID:     instanceID,
+		clusterID:      clusterID,
+		ctx:            ctx,
 	}, nil
 }
 
@@ -88,10 +89,16 @@ func (m *googleCloudClient) GetLastCPUMeasure() (int32, error) {
 }
 
 func (m *googleCloudClient) GetCurrentNodeCount() (int32, error) {
-	clusters, err := m.bigtableClient.Clusters(m.ctx, m.instanceID)
+	clustersInfo, err := m.bigtableClient.Clusters(m.ctx, m.instanceID)
 	if err != nil {
 		return -1, err
 	}
 
-	return clusters.NodesOfInstance(m.clusterID)
+	for _, clusterInfo := range clustersInfo {
+		if clusterInfo.Name() == m.clusterID {
+			return int32(clusterInfo.ServerNodes()), nil
+		}
+	}
+	message := fmt.Sprintf("Cluster of id %s not found", m.clusterID)
+	return -1, errors.New(message)
 }
