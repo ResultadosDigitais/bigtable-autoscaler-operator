@@ -38,6 +38,7 @@ import (
 
 	bigtablev1 "bigtable-autoscaler.com/m/v2/api/v1"
 	"bigtable-autoscaler.com/m/v2/pkg/googlecloud"
+	"bigtable-autoscaler.com/m/v2/pkg/nodes_calculator"
 )
 
 // BigtableAutoscalerReconciler reconciles a BigtableAutoscaler object
@@ -124,14 +125,7 @@ func (r *BigtableAutoscalerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 		autoscaler.Status.CurrentCPUUtilization = &cpuUsage
 	}
 
-	desiredNodes := calcDesiredNodes(
-		*autoscaler.Status.CurrentCPUUtilization,
-		*autoscaler.Status.CurrentNodes,
-		*autoscaler.Spec.TargetCPUUtilization,
-		*autoscaler.Spec.MinNodes,
-		*autoscaler.Spec.MaxNodes,
-		*autoscaler.Spec.MaxScaleDownNodes,
-	)
+	desiredNodes := nodes_calculator.CalcDesiredNodes(&autoscaler.Status, &autoscaler.Spec)
 	autoscaler.Status.DesiredNodes = &desiredNodes
 
 	now := r.clock.Now()
@@ -310,26 +304,6 @@ func (r *BigtableAutoscalerReconciler) needUpdateNodes(currentNodes, desiredNode
 	default:
 		r.Log.Info("Should update nodes")
 		return true
-	}
-}
-
-func calcDesiredNodes(currentCPU, currentNodes, targetCPU, minNodes, maxNodes, maxScaleDownNodes int32) int32 {
-	totalCPU := currentCPU * currentNodes
-	desiredNodes := totalCPU/targetCPU + 1 // roundup
-
-	if (currentNodes - desiredNodes) > maxScaleDownNodes {
-		desiredNodes = currentNodes - maxScaleDownNodes
-	}
-
-	switch {
-	case desiredNodes < minNodes:
-		return minNodes
-
-	case desiredNodes > maxNodes:
-		return maxNodes
-
-	default:
-		return desiredNodes
 	}
 }
 
