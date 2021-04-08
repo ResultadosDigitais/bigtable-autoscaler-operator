@@ -98,13 +98,13 @@ func (r *BigtableAutoscalerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 		r.fetcherStarted = true
 	}
 
-	googleCloudClient, err := googlecloud.NewClient(ctx, credentialsJSON, "cdp-development", "clustering-engine", "clustering-engine-c1")
+	googleCloudClient, err := googlecloud.NewClient(ctx, credentialsJSON, "cdp-development", "clustering-engine")
 
 	if err != nil {
 		return ctrl.Result{}, err
 	}
 
-	currentNodes, err := googleCloudClient.GetCurrentNodeCount()
+	currentNodes, err := googleCloudClient.GetCurrentNodeCount("clustering-engine-c1")
 
 	if err != nil {
 		r.Log.Error(err, "failed to get clusters")
@@ -231,7 +231,7 @@ func (r *BigtableAutoscalerReconciler) fetchMetrics(credentialsJSON []byte, name
 	eg.Go(func() error {
 		ticker := time.NewTicker(3 * time.Second)
 		var autoscaler *bigtablev1.BigtableAutoscaler
-		googleCloudClient, err := googlecloud.NewClient(ctx, credentialsJSON, "cdp-development", "clustering-engine", "clustering-engine-c1")
+		googleCloudClient, err := googlecloud.NewClient(ctx, credentialsJSON, "cdp-development", "clustering-engine")
 
 		if err != nil {
 			r.Log.Error(err, "failed to initialize google cloud client")

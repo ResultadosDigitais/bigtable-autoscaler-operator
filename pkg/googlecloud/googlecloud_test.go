@@ -123,7 +123,6 @@ func Test_googleCloudClient_GetCurrentNodeCount(t *testing.T) {
 				bigtableClient: &mockBigtableClientWrapperError,
 				projectID:      "my-project-id",
 				instanceID:     "my-instance-id",
-				clusterID:      "cluster-name-c1",
 				ctx:            context.Background(),
 			},
 			want:    -1,
@@ -136,10 +135,9 @@ func Test_googleCloudClient_GetCurrentNodeCount(t *testing.T) {
 				bigtableClient: tt.fields.bigtableClient,
 				projectID:      tt.fields.projectID,
 				instanceID:     tt.fields.instanceID,
-				clusterID:      tt.fields.clusterID,
 				ctx:            tt.fields.ctx,
 			}
-			got, err := m.GetCurrentNodeCount()
+			got, err := m.GetCurrentNodeCount(tt.fields.clusterID)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("googleCloudClient.GetCurrentNodeCount() error = %v, wantErr %v", err, tt.wantErr)
 

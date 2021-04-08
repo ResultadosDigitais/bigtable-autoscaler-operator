@@ -8,7 +8,7 @@ import (
 
 type GoogleCloudClient interface {
 	GetCurrentCPULoad() (int32, error)
-	GetCurrentNodeCount() (int32, error)
+	GetCurrentNodeCount(clusterID string) (int32, error)
 }
 
 type MetricClientWrapper interface {

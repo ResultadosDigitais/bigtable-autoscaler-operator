@@ -21,11 +21,10 @@ type googleCloudClient struct {
 	bigtableClient interfaces.BigtableClientWrapper
 	projectID      string
 	instanceID     string
-	clusterID      string
 	ctx            context.Context
 }
 
-func NewClient(ctx context.Context, credentialsJSON []byte, projectID, instanceID, clusterID string) (interfaces.GoogleCloudClient, error) {
+func NewClient(ctx context.Context, credentialsJSON []byte, projectID, instanceID string) (interfaces.GoogleCloudClient, error) {
 	metricClient, err := monitoring.NewMetricClient(ctx, option.WithCredentialsJSON(credentialsJSON))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create metrics client: %w", err)
@@ -47,7 +46,6 @@ func NewClient(ctx context.Context, credentialsJSON []byte, projectID, instanceI
 		bigtableClient: &bigtableClientWrapped,
 		projectID:      projectID,
 		instanceID:     instanceID,
-		clusterID:      clusterID,
 		ctx:            ctx,
 	}, nil
 }
@@ -85,18 +83,18 @@ func (m *googleCloudClient) GetCurrentCPULoad() (int32, error) {
 	return -1, nil
 }
 
-func (m *googleCloudClient) GetCurrentNodeCount() (int32, error) {
+func (m *googleCloudClient) GetCurrentNodeCount(clusterID string) (int32, error) {
 	clustersInfo, err := m.bigtableClient.Clusters(m.ctx, m.instanceID)
 	if err != nil {
 		return -1, fmt.Errorf("failed to get clusters info: %w", err)
 	}
 
 	for _, clusterInfo := range clustersInfo {
-		if clusterInfo.Name() == m.clusterID {
+		if clusterInfo.Name() == clusterID {
 			return clusterInfo.ServerNodes(), nil
 		}
 	}
-	message := fmt.Sprintf("Cluster of id %s not found", m.clusterID)
+	message := fmt.Sprintf("Cluster of id %s not found", clusterID)
 	return -1, errors.New(message)
 }
 
