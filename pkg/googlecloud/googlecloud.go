@@ -52,7 +52,7 @@ func NewClient(ctx context.Context, credentialsJSON []byte, projectID, instanceI
 	}, nil
 }
 
-func (m *googleCloudClient) GetLastCPUMeasure() (int32, error) {
+func (m *googleCloudClient) GetCurrentCPULoad() (int32, error) {
 	const timeWindow = 5 * time.Minute
 
 	startTime := time.Now().UTC().Add(-timeWindow)

@@ -40,6 +40,7 @@ func Test_googleCloudClient_GetLastCPUMeasure(t *testing.T) {
 			fields: fields{
 				metricsClient: &mockMetricsClientWrapper,
 				projectID:     "my-project-id",
+				instanceID:    "my-instance-id",
 				ctx:           context.Background(),
 			},
 			want:    50,
