@@ -1,4 +1,4 @@
-package status_syncer
+package status
 
 import (
 	"context"
@@ -10,35 +10,34 @@ import (
 	"bigtable-autoscaler.com/m/v2/pkg/interfaces"
 	"github.com/go-logr/logr"
 	"golang.org/x/sync/errgroup"
-	ctrlclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 const optimisticLockError = "the object has been modified; please apply your changes to the latest version and try again"
-const tickTime = 3
+const tickTime = 3 * time.Second
 
-type statusSyncer struct {
+type syncer struct {
 	ctx               context.Context
-	ctrlClient        ctrlclient.Client
+	statusWriter      interfaces.WriterWrapper
 	autoscaler        bigtablev1.BigtableAutoscaler
 	googleCloudClient interfaces.GoogleCloudClient
 	clusterID         string
 	log               logr.Logger
 }
 
-func NewStatusSyncer(
+func NewSyncer(
 	ctx context.Context,
-	ctrlClient ctrlclient.Client,
+	statusWriter interfaces.WriterWrapper,
 	autoscaler bigtablev1.BigtableAutoscaler,
 	googleCloundClient interfaces.GoogleCloudClient, clusterID string, log logr.Logger,
-) (*statusSyncer, error) {
+) (*syncer, error) {
 	if autoscaler.Status.CurrentCPUUtilization == nil {
 		var cpuUsage int32
 		autoscaler.Status.CurrentCPUUtilization = &cpuUsage
 	}
 
-	return &statusSyncer{
+	return &syncer{
 		ctx:               ctx,
-		ctrlClient:        ctrlClient,
+		statusWriter:      statusWriter,
 		autoscaler:        autoscaler,
 		googleCloudClient: googleCloundClient,
 		clusterID:         clusterID,
@@ -46,11 +45,11 @@ func NewStatusSyncer(
 	}, nil
 }
 
-func (s *statusSyncer) SyncStatus() {
+func (s *syncer) SyncStatus() {
 	eg, ctx := errgroup.WithContext(s.ctx)
 
 	eg.Go(func() error {
-		ticker := time.NewTicker(tickTime * time.Second)
+		ticker := time.NewTicker(tickTime)
 		for {
 			select {
 			case <-ticker.C:
@@ -70,7 +69,7 @@ func (s *statusSyncer) SyncStatus() {
 				s.autoscaler.Status.CurrentNodes = &currentNodes
 				s.log.V(1).Info("Metric read", "node count", currentNodes)
 
-				if err := s.ctrlClient.Status().Update(ctx, &s.autoscaler); err != nil {
+				if err := s.statusWriter.Update(ctx, &s.autoscaler); err != nil {
 					if strings.Contains(err.Error(), optimisticLockError) {
 						s.log.Info("A minor concurrency error occurred when updating status. We just need to try again.")
 

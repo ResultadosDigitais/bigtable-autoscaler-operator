@@ -38,7 +38,7 @@ import (
 	bigtablev1 "bigtable-autoscaler.com/m/v2/api/v1"
 	"bigtable-autoscaler.com/m/v2/pkg/googlecloud"
 	"bigtable-autoscaler.com/m/v2/pkg/nodes_calculator"
-	"bigtable-autoscaler.com/m/v2/pkg/status_syncer"
+	"bigtable-autoscaler.com/m/v2/pkg/status"
 )
 
 // BigtableAutoscalerReconciler reconciles a BigtableAutoscaler object
@@ -99,7 +99,7 @@ func (r *BigtableAutoscalerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 	}
 
 	if !r.fetcherStarted {
-		statusSyncer, err := status_syncer.NewStatusSyncer(ctx, r.Client, *autoscaler, googleCloudClient, "clustering-engine-c1", r.Log)
+		statusSyncer, err := status.NewSyncer(ctx, r.Client.Status(), *autoscaler, googleCloudClient, "clustering-engine-c1", r.Log)
 		if err != nil {
 			return ctrl.Result{}, err
 		}
