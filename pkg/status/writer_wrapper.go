@@ -13,7 +13,7 @@ type writerWrapper struct {
 }
 
 func (s *writerWrapper) Update(ctx context.Context, obj runtime.Object, opts ...ctrlclient.UpdateOption) error {
-	return s.Update(ctx, obj, opts...)
+	return s.statusWriter.Update(ctx, obj, opts...)
 }
 
 // Make sure the wrapper complies with its interface.
