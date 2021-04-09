@@ -18,7 +18,7 @@ const tickTime = 3 * time.Second
 type syncer struct {
 	ctx               context.Context
 	statusWriter      interfaces.WriterWrapper
-	autoscaler        bigtablev1.BigtableAutoscaler
+	autoscaler        *bigtablev1.BigtableAutoscaler
 	googleCloudClient interfaces.GoogleCloudClient
 	clusterID         string
 	log               logr.Logger
@@ -27,7 +27,7 @@ type syncer struct {
 func NewSyncer(
 	ctx context.Context,
 	statusWriter interfaces.WriterWrapper,
-	autoscaler bigtablev1.BigtableAutoscaler,
+	autoscaler *bigtablev1.BigtableAutoscaler,
 	googleCloundClient interfaces.GoogleCloudClient, clusterID string, log logr.Logger,
 ) (*syncer, error) {
 	if autoscaler.Status.CurrentCPUUtilization == nil {
@@ -69,7 +69,7 @@ func (s *syncer) SyncStatus() {
 				s.autoscaler.Status.CurrentNodes = &currentNodes
 				s.log.V(1).Info("Metric read", "node count", currentNodes)
 
-				if err := s.statusWriter.Update(ctx, &s.autoscaler); err != nil {
+				if err := s.statusWriter.Update(ctx, s.autoscaler); err != nil {
 					if strings.Contains(err.Error(), optimisticLockError) {
 						s.log.Info("A minor concurrency error occurred when updating status. We just need to try again.")
 
