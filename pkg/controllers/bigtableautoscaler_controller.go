@@ -99,7 +99,7 @@ func (r *BigtableAutoscalerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 	}
 
 	if !r.fetcherStarted {
-		statusSyncer, err := status_syncer.NewStatusSyncer(r.Client, *autoscaler, googleCloudClient, "clustering-engine-c1", ctx, r.Log)
+		statusSyncer, err := status_syncer.NewStatusSyncer(ctx, r.Client, *autoscaler, googleCloudClient, "clustering-engine-c1", r.Log)
 		if err != nil {
 			return ctrl.Result{}, err
 		}
@@ -107,26 +107,10 @@ func (r *BigtableAutoscalerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 		r.fetcherStarted = true
 	}
 
-
-	currentNodes, err := googleCloudClient.GetCurrentNodeCount("clustering-engine-c1")
-
-	if err != nil {
-		r.Log.Error(err, "failed to get clusters")
-		return ctrl.Result{}, err
-	}
-
-	autoscaler.Status.CurrentNodes = &currentNodes
-	r.Log.Info("Metric read", "node count", currentNodes)
-
 	var defaultMaxScaleDownNodes int32 = 2
 
 	if autoscaler.Spec.MaxScaleDownNodes == nil || *autoscaler.Spec.MaxScaleDownNodes == 0 {
 		autoscaler.Spec.MaxScaleDownNodes = &defaultMaxScaleDownNodes
-	}
-
-	if autoscaler.Status.CurrentCPUUtilization == nil {
-		var cpuUsage int32 = 0
-		autoscaler.Status.CurrentCPUUtilization = &cpuUsage
 	}
 
 	desiredNodes := nodes_calculator.CalcDesiredNodes(&autoscaler.Status, &autoscaler.Spec)
