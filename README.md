@@ -23,7 +23,7 @@ You can use kind to run a sample cluster
 kind create cluster
 ```
 
-check that your cluster is correclty running
+check that your cluster is correctly running
 
 ```sh
 kubectl cluster-info
