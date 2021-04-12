@@ -17,13 +17,15 @@ limitations under the License.
 package nodes_calculator
 
 import (
+	"math"
+
 	bigtablev1 "bigtable-autoscaler.com/m/v2/api/v1"
 )
 
 func CalcDesiredNodes(status *bigtablev1.BigtableAutoscalerStatus, spec *bigtablev1.BigtableAutoscalerSpec) int32 {
 	currentNodes := *status.CurrentNodes
 	totalCPU := *status.CurrentCPUUtilization * currentNodes
-	desiredNodes := totalCPU / *spec.TargetCPUUtilization
+	desiredNodes := int32(math.Ceil(float64(totalCPU) / float64(*spec.TargetCPUUtilization)))
 
 	if (currentNodes - desiredNodes) > *spec.MaxScaleDownNodes {
 		desiredNodes = currentNodes - *spec.MaxScaleDownNodes

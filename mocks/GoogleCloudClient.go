@@ -9,8 +9,8 @@ type GoogleCloudClient struct {
 	mock.Mock
 }
 
-// GetCurrentNodeCount provides a mock function with given fields:
-func (_m *GoogleCloudClient) GetCurrentNodeCount() (int32, error) {
+// GetCurrentCPULoad provides a mock function with given fields:
+func (_m *GoogleCloudClient) GetCurrentCPULoad() (int32, error) {
 	ret := _m.Called()
 
 	var r0 int32
@@ -30,20 +30,20 @@ func (_m *GoogleCloudClient) GetCurrentNodeCount() (int32, error) {
 	return r0, r1
 }
 
-// GetCurrentCPULoad provides a mock function with given fields:
-func (_m *GoogleCloudClient) GetCurrentCPULoad() (int32, error) {
-	ret := _m.Called()
+// GetCurrentNodeCount provides a mock function with given fields: clusterID
+func (_m *GoogleCloudClient) GetCurrentNodeCount(clusterID string) (int32, error) {
+	ret := _m.Called(clusterID)
 
 	var r0 int32
-	if rf, ok := ret.Get(0).(func() int32); ok {
-		r0 = rf()
+	if rf, ok := ret.Get(0).(func(string) int32); ok {
+		r0 = rf(clusterID)
 	} else {
 		r0 = ret.Get(0).(int32)
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func() error); ok {
-		r1 = rf()
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(clusterID)
 	} else {
 		r1 = ret.Error(1)
 	}
