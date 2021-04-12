@@ -14,7 +14,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
-func Test_statusSyncer_SyncStatus(t *testing.T) {
+func Test_statusSyncer_Start(t *testing.T) {
 	autoscaler := bigtablev1.BigtableAutoscaler{}
 
 	mockStatusWriterWrapper := mocks.WriterWrapper{}
@@ -61,7 +61,7 @@ func Test_statusSyncer_SyncStatus(t *testing.T) {
 				clusterID:         tt.fields.clusterID,
 				log:               tt.fields.log,
 			}
-			s.SyncStatus()
+			s.Start()
 		})
 	}
 	// We need to wait for the ticker to tick

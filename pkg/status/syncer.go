@@ -45,7 +45,7 @@ func NewSyncer(
 	}, nil
 }
 
-func (s *syncer) SyncStatus() {
+func (s *syncer) Start() {
 	eg, ctx := errgroup.WithContext(s.ctx)
 
 	eg.Go(func() error {

@@ -103,7 +103,7 @@ func (r *BigtableAutoscalerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 		if err != nil {
 			return ctrl.Result{}, err
 		}
-		statusSyncer.SyncStatus()
+		statusSyncer.Start()
 		r.fetcherStarted = true
 	}
 
