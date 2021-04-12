@@ -10,10 +10,14 @@ import (
 	"bigtable-autoscaler.com/m/v2/pkg/interfaces"
 	"github.com/go-logr/logr"
 	"golang.org/x/sync/errgroup"
+	ctrlclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 const optimisticLockError = "the object has been modified; please apply your changes to the latest version and try again"
 const tickTime = 3 * time.Second
+
+// Make sure the writer complies with its interface.
+var _ (interfaces.WriterWrapper) = (ctrlclient.StatusWriter)(nil)
 
 type syncer struct {
 	ctx               context.Context
