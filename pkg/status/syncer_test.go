@@ -69,8 +69,6 @@ func Test_statusSyncer_Start(t *testing.T) {
 			wg.Wait()
 		})
 	}
-	// We need to wait for the go routine
-	// time.Sleep(1 * time.Millisecond)
 	if assert.NotNil(t, autoscaler) {
 		assert.Equal(t, int32(55), *autoscaler.Status.CurrentCPUUtilization)
 		assert.Equal(t, int32(2), *autoscaler.Status.CurrentNodes)
