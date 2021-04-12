@@ -64,8 +64,8 @@ func Test_statusSyncer_Start(t *testing.T) {
 			s.Start()
 		})
 	}
-	// We need to wait for the ticker to tick
-	time.Sleep(4 * time.Second)
+	// We need to wait for the go routine
+	time.Sleep(1 * time.Millisecond)
 	if assert.NotNil(t, autoscaler) {
 		assert.Equal(t, int32(55), *autoscaler.Status.CurrentCPUUtilization)
 		assert.Equal(t, int32(2), *autoscaler.Status.CurrentNodes)
