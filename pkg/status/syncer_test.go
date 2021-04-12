@@ -3,7 +3,7 @@ package status
 import (
 	"context"
 	"testing"
-	"time"
+	"sync"
 
 	bigtablev1 "bigtable-autoscaler.com/m/v2/api/v1"
 	"bigtable-autoscaler.com/m/v2/mocks"
@@ -17,8 +17,12 @@ import (
 func Test_statusSyncer_Start(t *testing.T) {
 	autoscaler := bigtablev1.BigtableAutoscaler{}
 
+	wg := sync.WaitGroup{}
+	wg.Add(1)
 	mockStatusWriterWrapper := mocks.WriterWrapper{}
-	mockStatusWriterWrapper.On("Update", mock.Anything, &autoscaler).Return(nil)
+	mockStatusWriterWrapper.On("Update", mock.Anything, &autoscaler).Return(nil).Run(func (args mock.Arguments) {
+		wg.Done()
+	})
 
 	cpuUsage := int32(55)
 	nodesCount := int32(2)
@@ -62,12 +66,14 @@ func Test_statusSyncer_Start(t *testing.T) {
 				log:               tt.fields.log,
 			}
 			s.Start()
+			wg.Wait()
 		})
 	}
 	// We need to wait for the go routine
-	time.Sleep(1 * time.Millisecond)
+	// time.Sleep(1 * time.Millisecond)
 	if assert.NotNil(t, autoscaler) {
 		assert.Equal(t, int32(55), *autoscaler.Status.CurrentCPUUtilization)
 		assert.Equal(t, int32(2), *autoscaler.Status.CurrentNodes)
 	}
+
 }
