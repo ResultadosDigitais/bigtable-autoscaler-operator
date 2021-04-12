@@ -113,6 +113,16 @@ func (r *BigtableAutoscalerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 		autoscaler.Spec.MaxScaleDownNodes = &defaultMaxScaleDownNodes
 	}
 
+	if autoscaler.Status.CurrentCPUUtilization == nil {
+		var cpuUsage int32 = 0
+		autoscaler.Status.CurrentCPUUtilization = &cpuUsage
+	}
+
+	if autoscaler.Status.CurrentNodes == nil {
+		var nodes int32 = 0
+		autoscaler.Status.CurrentNodes = &nodes
+	}
+
 	desiredNodes := nodes_calculator.CalcDesiredNodes(&autoscaler.Status, &autoscaler.Spec)
 	autoscaler.Status.DesiredNodes = &desiredNodes
 
