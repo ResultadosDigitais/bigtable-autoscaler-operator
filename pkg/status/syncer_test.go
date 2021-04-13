@@ -12,8 +12,8 @@ import (
 	"github.com/stretchr/testify/mock"
 	ctrl "sigs.k8s.io/controller-runtime"
 
-	googlecloud "bigtable-autoscaler.com/m/v2/pkg/googlecloud"
-	status "bigtable-autoscaler.com/m/v2/pkg/status"
+	"bigtable-autoscaler.com/m/v2/pkg/googlecloud"
+	"bigtable-autoscaler.com/m/v2/pkg/status"
 )
 
 func Test_statusSyncer_Start(t *testing.T) {

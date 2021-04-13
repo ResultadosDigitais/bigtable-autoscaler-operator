@@ -5,7 +5,7 @@ import (
 	"errors"
 	"testing"
 
-	googlecloud "bigtable-autoscaler.com/m/v2/pkg/googlecloud"
+	"bigtable-autoscaler.com/m/v2/pkg/googlecloud"
 
 	"bigtable-autoscaler.com/m/v2/mocks"
 	"github.com/stretchr/testify/mock"
