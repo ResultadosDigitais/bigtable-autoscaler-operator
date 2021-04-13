@@ -7,6 +7,6 @@ import (
 	ctrlclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-type WriterWrapper interface {
+type Writer interface {
 	Update(ctx context.Context, obj runtime.Object, opts ...ctrlclient.UpdateOption) error
 }

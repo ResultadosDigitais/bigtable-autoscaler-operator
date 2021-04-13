@@ -34,18 +34,12 @@ func (w *timeSeriesIteratorWrapper) Points() ([]int32, error) {
 	return normalizedPoints, nil
 }
 
-// Make sure the wrapper complies with its interface.
-var _ TimeSeriesIteratorWrapper = (*timeSeriesIteratorWrapper)(nil)
-
 func (w *metricClientWrapper) ListTimeSeries(
 	ctx context.Context, req *monitoringpb.ListTimeSeriesRequest,
-) TimeSeriesIteratorWrapper {
+) TimeSeriesIterator {
 	it := w.metricsClient.ListTimeSeries(ctx, req)
 
 	ts := timeSeriesIteratorWrapper{iterator: it}
 
 	return &ts
 }
-
-// Make sure the wrapper complies with its interface.
-var _ MetricClientWrapper = (*metricClientWrapper)(nil)

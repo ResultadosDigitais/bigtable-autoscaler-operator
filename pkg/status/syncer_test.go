@@ -21,21 +21,21 @@ func Test_statusSyncer_Start(t *testing.T) {
 
 	wg := sync.WaitGroup{}
 	wg.Add(1)
-	mockStatusWriterWrapper := mocks.WriterWrapper{}
-	mockStatusWriterWrapper.On("Update", mock.Anything, &autoscaler).Return(nil).Run(func(args mock.Arguments) {
+	mockStatusWriter := mocks.Writer{}
+	mockStatusWriter.On("Update", mock.Anything, &autoscaler).Return(nil).Run(func(args mock.Arguments) {
 		wg.Done()
 	})
 
 	cpuUsage := int32(55)
 	nodesCount := int32(2)
 
-	mockGoogleCloudClientWrapper := mocks.GoogleCloudClient{}
-	mockGoogleCloudClientWrapper.On("GetCurrentCPULoad").Return(cpuUsage, nil)
-	mockGoogleCloudClientWrapper.On("GetCurrentNodeCount", "cluster-id").Return(nodesCount, nil)
+	mockGoogleCloudClient := mocks.GoogleCloudClient{}
+	mockGoogleCloudClient.On("GetCurrentCPULoad").Return(cpuUsage, nil)
+	mockGoogleCloudClient.On("GetCurrentNodeCount", "cluster-id").Return(nodesCount, nil)
 
 	type fields struct {
 		ctx               context.Context
-		statusWriter      status.WriterWrapper
+		statusWriter      status.Writer
 		autoscaler        *bigtablev1.BigtableAutoscaler
 		googleCloudClient googlecloud.GoogleCloudClient
 		clusterID         string
@@ -49,9 +49,9 @@ func Test_statusSyncer_Start(t *testing.T) {
 			name: "starts the syncer",
 			fields: fields{
 				ctx:               context.Background(),
-				statusWriter:      &mockStatusWriterWrapper,
+				statusWriter:      &mockStatusWriter,
 				autoscaler:        &autoscaler,
-				googleCloudClient: &mockGoogleCloudClientWrapper,
+				googleCloudClient: &mockGoogleCloudClient,
 				clusterID:         "cluster-id",
 				log:               ctrl.Log.WithName("test runtime"),
 			},

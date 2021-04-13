@@ -11,19 +11,19 @@ type GoogleCloudClient interface {
 	GetCurrentNodeCount(clusterID string) (int32, error)
 }
 
-type MetricClientWrapper interface {
-	ListTimeSeries(ctx context.Context, req *monitoringpb.ListTimeSeriesRequest) TimeSeriesIteratorWrapper
+type MetricClient interface {
+	ListTimeSeries(ctx context.Context, req *monitoringpb.ListTimeSeriesRequest) TimeSeriesIterator
 }
 
-type TimeSeriesIteratorWrapper interface {
+type TimeSeriesIterator interface {
 	Points() ([]int32, error)
 }
 
-type BigtableClientWrapper interface {
-	Clusters(ctx context.Context, instanceID string) ([]ClusterInfoWrapper, error)
+type BigtableClient interface {
+	Clusters(ctx context.Context, instanceID string) ([]ClusterInfo, error)
 }
 
-type ClusterInfoWrapper interface {
+type ClusterInfo interface {
 	Name() string
 	ServerNodes() int32
 }

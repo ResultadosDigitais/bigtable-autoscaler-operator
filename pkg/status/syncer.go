@@ -10,18 +10,14 @@ import (
 	googlecloud "bigtable-autoscaler.com/m/v2/pkg/googlecloud"
 	"github.com/go-logr/logr"
 	"golang.org/x/sync/errgroup"
-	ctrlclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 const optimisticLockError = "the object has been modified; please apply your changes to the latest version and try again"
 const tickTime = 3 * time.Second
 
-// Make sure the writer complies with its interface.
-var _ (WriterWrapper) = (ctrlclient.StatusWriter)(nil)
-
 type syncer struct {
 	ctx               context.Context
-	statusWriter      WriterWrapper
+	statusWriter      Writer
 	autoscaler        *bigtablev1.BigtableAutoscaler
 	googleCloudClient googlecloud.GoogleCloudClient
 	clusterID         string
@@ -30,7 +26,7 @@ type syncer struct {
 
 func NewSyncer(
 	ctx context.Context,
-	statusWriter WriterWrapper,
+	statusWriter Writer,
 	autoscaler *bigtablev1.BigtableAutoscaler,
 	googleCloundClient googlecloud.GoogleCloudClient, clusterID string, log logr.Logger,
 ) *syncer {

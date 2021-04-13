@@ -16,8 +16,8 @@ import (
 )
 
 type googleCloudClient struct {
-	metricsClient  MetricClientWrapper
-	bigtableClient BigtableClientWrapper
+	metricsClient  MetricClient
+	bigtableClient BigtableClient
 	projectID      string
 	instanceID     string
 	ctx            context.Context
@@ -43,8 +43,8 @@ func NewClient(ctx context.Context, credentialsJSON []byte, projectID, instanceI
 	return ClientBuilder(ctx, projectID, instanceID, &metricClientWrapped, &bigtableClientWrapped), nil
 }
 
-func ClientBuilder(ctx context.Context, projectID, instanceID string, metricClientWrapped MetricClientWrapper,
-	bigtableClientWrapped BigtableClientWrapper) GoogleCloudClient {
+func ClientBuilder(ctx context.Context, projectID, instanceID string, metricClientWrapped MetricClient,
+	bigtableClientWrapped BigtableClient) GoogleCloudClient {
 	return &googleCloudClient{
 		metricsClient:  metricClientWrapped,
 		bigtableClient: bigtableClientWrapped,
@@ -101,6 +101,3 @@ func (m *googleCloudClient) GetCurrentNodeCount(clusterID string) (int32, error)
 	message := fmt.Sprintf("Cluster of id %s not found", clusterID)
 	return -1, errors.New(message)
 }
-
-// Make sure the real implementation complies with its interface.
-var _ GoogleCloudClient = (*googleCloudClient)(nil)

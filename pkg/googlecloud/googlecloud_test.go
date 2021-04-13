@@ -12,20 +12,20 @@ import (
 )
 
 func Test_googleCloudClient_GetCurrentCPULoad(t *testing.T) {
-	mockMetricsClientWrapper := mocks.MetricClientWrapper{}
-	mockTimeSeriesIteratorWrapper := mocks.TimeSeriesIteratorWrapper{}
+	mockMetricsClient := mocks.MetricClient{}
+	mockTimeSeriesIterator := mocks.TimeSeriesIterator{}
 	values := []int32{50, 45, 30}
-	mockTimeSeriesIteratorWrapper.On("Points").Return(values, nil)
-	mockMetricsClientWrapper.On("ListTimeSeries", mock.Anything, mock.Anything).Return(&mockTimeSeriesIteratorWrapper)
+	mockTimeSeriesIterator.On("Points").Return(values, nil)
+	mockMetricsClient.On("ListTimeSeries", mock.Anything, mock.Anything).Return(&mockTimeSeriesIterator)
 
-	mockMetricsClientWrapperError := mocks.MetricClientWrapper{}
-	mockTimeSeriesIteratorWrapperError := mocks.TimeSeriesIteratorWrapper{}
-	mockTimeSeriesIteratorWrapperError.On("Points").Return(nil, errors.New("failed to get metrics"))
-	mockMetricsClientWrapperError.On("ListTimeSeries", mock.Anything, mock.Anything).
-		Return(&mockTimeSeriesIteratorWrapperError)
+	mockMetricsClientError := mocks.MetricClient{}
+	mockTimeSeriesIteratorError := mocks.TimeSeriesIterator{}
+	mockTimeSeriesIteratorError.On("Points").Return(nil, errors.New("failed to get metrics"))
+	mockMetricsClientError.On("ListTimeSeries", mock.Anything, mock.Anything).
+		Return(&mockTimeSeriesIteratorError)
 
 	type fields struct {
-		metricsClient googlecloud.MetricClientWrapper
+		metricsClient googlecloud.MetricClient
 		projectID     string
 		instanceID    string
 		ctx           context.Context
@@ -39,7 +39,7 @@ func Test_googleCloudClient_GetCurrentCPULoad(t *testing.T) {
 		{
 			name: "returns the first value of the series",
 			fields: fields{
-				metricsClient: &mockMetricsClientWrapper,
+				metricsClient: &mockMetricsClient,
 				projectID:     "my-project-id",
 				instanceID:    "my-instance-id",
 				ctx:           context.Background(),
@@ -50,7 +50,7 @@ func Test_googleCloudClient_GetCurrentCPULoad(t *testing.T) {
 		{
 			name: "raises error",
 			fields: fields{
-				metricsClient: &mockMetricsClientWrapperError,
+				metricsClient: &mockMetricsClientError,
 				projectID:     "my-project-id",
 				instanceID:    "my-instance-id",
 				ctx:           context.Background(),
@@ -82,20 +82,20 @@ func Test_googleCloudClient_GetCurrentCPULoad(t *testing.T) {
 }
 
 func Test_googleCloudClient_GetCurrentNodeCount(t *testing.T) {
-	mockBigtableClientWrapper := mocks.BigtableClientWrapper{}
-	mockClusterInfoWrapper := mocks.ClusterInfoWrapper{}
-	clustersInfo := []googlecloud.ClusterInfoWrapper{&mockClusterInfoWrapper}
-	mockClusterInfoWrapper.On("Name").Return("cluster-name-c1")
-	mockClusterInfoWrapper.On("ServerNodes").Return(int32(2))
-	mockBigtableClientWrapper.On("Clusters", mock.Anything, mock.Anything).Return(clustersInfo, nil)
+	mockBigtableClient := mocks.BigtableClient{}
+	mockClusterInfo := mocks.ClusterInfo{}
+	clustersInfo := []googlecloud.ClusterInfo{&mockClusterInfo}
+	mockClusterInfo.On("Name").Return("cluster-name-c1")
+	mockClusterInfo.On("ServerNodes").Return(int32(2))
+	mockBigtableClient.On("Clusters", mock.Anything, mock.Anything).Return(clustersInfo, nil)
 
-	mockBigtableClientWrapperError := mocks.BigtableClientWrapper{}
-	mockClusterInfoWrapperError := mocks.ClusterInfoWrapper{}
-	clustersInfoError := []googlecloud.ClusterInfoWrapper{&mockClusterInfoWrapperError}
-	mockClusterInfoWrapperError.On("Name").Return("cluster-name-c2")
-	mockBigtableClientWrapperError.On("Clusters", mock.Anything, mock.Anything).Return(clustersInfoError, nil)
+	mockBigtableClientError := mocks.BigtableClient{}
+	mockClusterInfoError := mocks.ClusterInfo{}
+	clustersInfoError := []googlecloud.ClusterInfo{&mockClusterInfoError}
+	mockClusterInfoError.On("Name").Return("cluster-name-c2")
+	mockBigtableClientError.On("Clusters", mock.Anything, mock.Anything).Return(clustersInfoError, nil)
 	type fields struct {
-		bigtableClient googlecloud.BigtableClientWrapper
+		bigtableClient googlecloud.BigtableClient
 		projectID      string
 		instanceID     string
 		clusterID      string
@@ -110,7 +110,7 @@ func Test_googleCloudClient_GetCurrentNodeCount(t *testing.T) {
 		{
 			name: "returns the nodes count",
 			fields: fields{
-				bigtableClient: &mockBigtableClientWrapper,
+				bigtableClient: &mockBigtableClient,
 				projectID:      "my-project-id",
 				instanceID:     "my-instance-id",
 				clusterID:      "cluster-name-c1",
@@ -122,7 +122,7 @@ func Test_googleCloudClient_GetCurrentNodeCount(t *testing.T) {
 		{
 			name: "do not find cluster id",
 			fields: fields{
-				bigtableClient: &mockBigtableClientWrapperError,
+				bigtableClient: &mockBigtableClientError,
 				projectID:      "my-project-id",
 				instanceID:     "my-instance-id",
 				ctx:            context.Background(),
