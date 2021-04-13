@@ -60,18 +60,13 @@ type BigtableAutoscalerSpec struct {
 
 // BigtableAutoscalerStatus defines the observed state of BigtableAutoscaler
 type BigtableAutoscalerStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	LastScaleTime *metav1.Time `json:"lastScaleTime,omitempty"`
-
-	LastFetchTime *metav1.Time `json:"lastFetchTime,omitempty"`
-
-	CurrentNodes *int32 `json:"currentNodes,omitempty"`
-
-	DesiredNodes *int32 `json:"desiredNodes,omitempty"`
-
-	CurrentCPUUtilization *int32 `json:"CPUUtilization,omitempty"`
+	LastScaleTime         *metav1.Time `json:"lastScaleTime,omitempty"`
+	LastFetchTime         *metav1.Time `json:"lastFetchTime,omitempty"`
+	CurrentNodes          *int32       `json:"currentNodes,omitempty"`
+	DesiredNodes          *int32       `json:"desiredNodes,omitempty"`
+	CurrentCPUUtilization *int32       `json:"CPUUtilization,omitempty"`
 }
 
 // +kubebuilder:object:root=true
