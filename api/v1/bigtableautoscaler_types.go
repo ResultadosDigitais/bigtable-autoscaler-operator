@@ -69,6 +69,14 @@ type BigtableAutoscalerStatus struct {
 	CurrentCPUUtilization *int32       `json:"CPUUtilization,omitempty"`
 }
 
+type BigtableClusterRef struct {
+	// Important: Run "make" to regenerate code after modifying this file
+
+	ProjectID  string `json:"projectId,omitempty"`
+	InstanceID string `json:"instanceId,omitempty"`
+	ClusterID  string `json:"clusterId,omitempty"`
+}
+
 // +kubebuilder:object:root=true
 // +kubebuilder:printcolumn:name="nodes",type=string,JSONPath=`.status.currentNodes`
 // +kubebuilder:printcolumn:name="desired_nodes",type=string,JSONPath=`.status.desiredNodes`
