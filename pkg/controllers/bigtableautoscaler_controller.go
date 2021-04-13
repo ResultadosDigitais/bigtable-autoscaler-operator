@@ -60,7 +60,7 @@ func NewBigtableReconciler(
 ) *BigtableAutoscalerReconciler {
 
 	r := &BigtableAutoscalerReconciler{
-		client:    Client,
+		Client:    client,
 		APIReader: reader,
 		Scheme:    scheme,
 		Log:       ctrl.Log.WithName("controllers").WithName("BigtableAutoscaler"),
