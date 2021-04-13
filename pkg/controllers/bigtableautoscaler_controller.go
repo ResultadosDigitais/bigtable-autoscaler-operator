@@ -222,7 +222,7 @@ func (r *BigtableAutoscalerReconciler) needUpdateNodes(currentNodes, desiredNode
 
 	switch {
 	case desiredNodes == currentNodes:
-		r.Log.V(0).Info("the desired number of nodes is equal to that of the current; no need to scale nodes")
+		r.Log.Info("the desired number of nodes is equal to that of the current; no need to scale nodes")
 		return false
 
 	case desiredNodes > currentNodes && now.Before(lastScaleTime.Time.Add(scaleUpInterval)):
