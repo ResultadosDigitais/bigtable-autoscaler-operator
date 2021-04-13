@@ -1,0 +1,100 @@
+
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.5.0
+  creationTimestamp: null
+  name: bigtableclusters.bigtable.bigtable-autoscaler.com
+spec:
+  group: bigtable.bigtable-autoscaler.com
+  names:
+    kind: BigtableCluster
+    listKind: BigtableClusterList
+    plural: bigtableclusters
+    singular: bigtablecluster
+  scope: Namespaced
+  versions:
+  - name: v1
+    schema:
+      openAPIV3Schema:
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: BigtableAutoscalerSpec defines the desired state of BigtableAutoscaler
+            properties:
+              maxNodes:
+                description: upper limit for the number of nodes that can be set by the autoscaler. It cannot be smaller than MinNodes.
+                format: int32
+                minimum: 1
+                type: integer
+              maxScaleDownNodes:
+                description: upper limit for the number of nodes when autoscaler scaledown.
+                format: int32
+                minimum: 1
+                type: integer
+              minNodes:
+                description: lower limit for the number of nodes that can be set by the autoscaler.
+                format: int32
+                minimum: 1
+                type: integer
+              serviceAccountSecretRef:
+                properties:
+                  key:
+                    minLength: 1
+                    type: string
+                  name:
+                    minLength: 1
+                    type: string
+                  namespace:
+                    type: string
+                required:
+                - key
+                - name
+                type: object
+              targetCPUUtilization:
+                description: target average CPU utilization for Bigtable.
+                format: int32
+                type: integer
+            required:
+            - maxNodes
+            - minNodes
+            - serviceAccountSecretRef
+            - targetCPUUtilization
+            type: object
+          status:
+            description: BigtableAutoscalerStatus defines the observed state of BigtableAutoscaler
+            properties:
+              CPUUtilization:
+                format: int32
+                type: integer
+              currentNodes:
+                format: int32
+                type: integer
+              desiredNodes:
+                format: int32
+                type: integer
+              lastFetchTime:
+                format: date-time
+                type: string
+              lastScaleTime:
+                format: date-time
+                type: string
+            type: object
+        type: object
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
