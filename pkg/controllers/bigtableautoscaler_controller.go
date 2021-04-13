@@ -107,7 +107,6 @@ func (r *BigtableAutoscalerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 	}
 
 	if _, ok := r.syncers[req.NamespacedName]; !ok {
-		r.Log.Info("Subindo um novo syncer")
 		statusSyncer := status.NewSyncer(ctx, r.Status(), autoscaler, googleCloudClient, "clustering-engine-c1", r.Log)
 		statusSyncer.Start()
 
