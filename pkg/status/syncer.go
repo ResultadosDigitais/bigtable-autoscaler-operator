@@ -16,7 +16,7 @@ const optimisticLockError = "the object has been modified; please apply your cha
 const inexistentResourceError = "invalid object"
 const tickTime = 3 * time.Second
 
-type syncer struct {
+type Syncer struct {
 	ctx               context.Context
 	statusWriter      Writer
 	autoscaler        *bigtablev1.BigtableAutoscaler
@@ -30,13 +30,13 @@ func NewSyncer(
 	statusWriter Writer,
 	autoscaler *bigtablev1.BigtableAutoscaler,
 	googleCloundClient googlecloud.GoogleCloudClient, clusterID string, log logr.Logger,
-) *syncer {
+) *Syncer {
 	if autoscaler.Status.CurrentCPUUtilization == nil {
 		var cpuUsage int32
 		autoscaler.Status.CurrentCPUUtilization = &cpuUsage
 	}
 
-	return &syncer{
+	return &Syncer{
 		ctx:               ctx,
 		statusWriter:      statusWriter,
 		autoscaler:        autoscaler,
@@ -46,7 +46,7 @@ func NewSyncer(
 	}
 }
 
-func (s *syncer) Start() {
+func (s *Syncer) Start() {
 	eg, ctx := errgroup.WithContext(s.ctx)
 
 	eg.Go(func() error {
