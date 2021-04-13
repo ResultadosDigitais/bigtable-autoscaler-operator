@@ -5,7 +5,7 @@ package mocks
 import (
 	context "context"
 
-	interfaces "bigtable-autoscaler.com/m/v2/pkg/interfaces"
+	googlecloud "bigtable-autoscaler.com/m/v2/pkg/googlecloud"
 	mock "github.com/stretchr/testify/mock"
 
 	monitoring "google.golang.org/genproto/googleapis/monitoring/v3"
@@ -17,15 +17,15 @@ type MetricClientWrapper struct {
 }
 
 // ListTimeSeries provides a mock function with given fields: ctx, req
-func (_m *MetricClientWrapper) ListTimeSeries(ctx context.Context, req *monitoring.ListTimeSeriesRequest) interfaces.TimeSeriesIteratorWrapper {
+func (_m *MetricClientWrapper) ListTimeSeries(ctx context.Context, req *monitoring.ListTimeSeriesRequest) googlecloud.TimeSeriesIteratorWrapper {
 	ret := _m.Called(ctx, req)
 
-	var r0 interfaces.TimeSeriesIteratorWrapper
-	if rf, ok := ret.Get(0).(func(context.Context, *monitoring.ListTimeSeriesRequest) interfaces.TimeSeriesIteratorWrapper); ok {
+	var r0 googlecloud.TimeSeriesIteratorWrapper
+	if rf, ok := ret.Get(0).(func(context.Context, *monitoring.ListTimeSeriesRequest) googlecloud.TimeSeriesIteratorWrapper); ok {
 		r0 = rf(ctx, req)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(interfaces.TimeSeriesIteratorWrapper)
+			r0 = ret.Get(0).(googlecloud.TimeSeriesIteratorWrapper)
 		}
 	}
 

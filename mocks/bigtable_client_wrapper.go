@@ -5,7 +5,7 @@ package mocks
 import (
 	context "context"
 
-	interfaces "bigtable-autoscaler.com/m/v2/pkg/interfaces"
+	googlecloud "bigtable-autoscaler.com/m/v2/pkg/googlecloud"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -15,15 +15,15 @@ type BigtableClientWrapper struct {
 }
 
 // Clusters provides a mock function with given fields: ctx, instanceID
-func (_m *BigtableClientWrapper) Clusters(ctx context.Context, instanceID string) ([]interfaces.ClusterInfoWrapper, error) {
+func (_m *BigtableClientWrapper) Clusters(ctx context.Context, instanceID string) ([]googlecloud.ClusterInfoWrapper, error) {
 	ret := _m.Called(ctx, instanceID)
 
-	var r0 []interfaces.ClusterInfoWrapper
-	if rf, ok := ret.Get(0).(func(context.Context, string) []interfaces.ClusterInfoWrapper); ok {
+	var r0 []googlecloud.ClusterInfoWrapper
+	if rf, ok := ret.Get(0).(func(context.Context, string) []googlecloud.ClusterInfoWrapper); ok {
 		r0 = rf(ctx, instanceID)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]interfaces.ClusterInfoWrapper)
+			r0 = ret.Get(0).([]googlecloud.ClusterInfoWrapper)
 		}
 	}
 
