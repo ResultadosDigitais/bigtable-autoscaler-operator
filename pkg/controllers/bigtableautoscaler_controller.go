@@ -93,7 +93,7 @@ func (r *BigtableAutoscalerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 		return ctrl.Result{}, err
 	}
 
-	googleCloudClient, err := googlecloud.NewClient(ctx, credentialsJSON, "cdp-development", "clustering-engine")
+	googleCloudClient, err := googlecloud.NewClientFromCredentials(ctx, credentialsJSON, "cdp-development", "clustering-engine")
 	if err != nil {
 		return ctrl.Result{}, err
 	}

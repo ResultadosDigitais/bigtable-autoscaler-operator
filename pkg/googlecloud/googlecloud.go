@@ -23,7 +23,7 @@ type googleCloudClient struct {
 	ctx            context.Context
 }
 
-func NewClient(ctx context.Context, credentialsJSON []byte, projectID, instanceID string) (GoogleCloudClient, error) {
+func NewClientFromCredentials(ctx context.Context, credentialsJSON []byte, projectID, instanceID string) (GoogleCloudClient, error) {
 	metricClient, err := monitoring.NewMetricClient(ctx, option.WithCredentialsJSON(credentialsJSON))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create metrics client: %w", err)
@@ -40,10 +40,10 @@ func NewClient(ctx context.Context, credentialsJSON []byte, projectID, instanceI
 		bigtableClient: bigtableClient,
 	}
 
-	return ClientBuilder(ctx, projectID, instanceID, &metricClientWrapped, &bigtableClientWrapped), nil
+	return NewClient(ctx, projectID, instanceID, &metricClientWrapped, &bigtableClientWrapped), nil
 }
 
-func ClientBuilder(ctx context.Context, projectID, instanceID string, metricClientWrapped MetricClient,
+func NewClient(ctx context.Context, projectID, instanceID string, metricClientWrapped MetricClient,
 	bigtableClientWrapped BigtableClient) GoogleCloudClient {
 	return &googleCloudClient{
 		metricsClient:  metricClientWrapped,

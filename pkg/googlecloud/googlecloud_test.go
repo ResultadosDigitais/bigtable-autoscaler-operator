@@ -61,7 +61,7 @@ func Test_googleCloudClient_GetCurrentCPULoad(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			m := googlecloud.ClientBuilder(
+			m := googlecloud.NewClient(
 				tt.fields.ctx,
 				tt.fields.projectID,
 				tt.fields.instanceID,
@@ -133,7 +133,7 @@ func Test_googleCloudClient_GetCurrentNodeCount(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			m := googlecloud.ClientBuilder(
+			m := googlecloud.NewClient(
 				tt.fields.ctx,
 				tt.fields.projectID,
 				tt.fields.instanceID,
