@@ -48,25 +48,22 @@ type BigtableAutoscalerReconciler struct {
 	Log       logr.Logger
 	Scheme    *runtime.Scheme
 
-	fetcherStarted bool
-
 	clock clock.Clock
 }
 
 const optimisticLockErrorMsg = "the object has been modified; please apply your changes to the latest version and try again"
 
 func NewBigtableReconciler(
-	Client ctrlclient.Client,
-	apiReader ctrlclient.Reader,
+	client ctrlclient.Client,
+	reader ctrlclient.Reader,
 	scheme *runtime.Scheme,
 ) *BigtableAutoscalerReconciler {
 
 	r := &BigtableAutoscalerReconciler{
-		Client:         Client,
-		APIReader:      apiReader,
-		Log:            ctrl.Log.WithName("controllers").WithName("BigtableAutoscaler"),
-		Scheme:         scheme,
-		fetcherStarted: false,
+		client:    Client,
+		APIReader: reader,
+		Scheme:    scheme,
+		Log:       ctrl.Log.WithName("controllers").WithName("BigtableAutoscaler"),
 	}
 
 	return r
@@ -110,10 +107,11 @@ func (r *BigtableAutoscalerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 		return ctrl.Result{}, err
 	}
 
-	if !r.fetcherStarted {
+	if !autoscaler.FetcherStarted {
 		statusSyncer := status.NewSyncer(ctx, r.Client.Status(), autoscaler, googleCloudClient, "clustering-engine-c1", r.Log)
 		statusSyncer.Start()
-		r.fetcherStarted = true
+
+		autoscaler.FetcherStarted = true
 	}
 
 	var defaultMaxScaleDownNodes int32 = 2
