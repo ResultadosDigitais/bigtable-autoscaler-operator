@@ -7,7 +7,7 @@ import (
 	"time"
 
 	bigtablev1 "bigtable-autoscaler.com/m/v2/api/v1"
-	googlecloud "bigtable-autoscaler.com/m/v2/pkg/googlecloud"
+	"bigtable-autoscaler.com/m/v2/pkg/googlecloud"
 	"github.com/go-logr/logr"
 	"golang.org/x/sync/errgroup"
 )
