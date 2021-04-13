@@ -79,14 +79,26 @@ func (r *BigtableAutoscalerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 	ctx := context.Background()
 	r.clock = clock.RealClock{}
 
+	l := ctrl.Log.WithName("WIP")
+	l.Info("Reconciling", "req", req)
+
 	autoscaler, err := r.getAutoscaler(req.NamespacedName)
 
 	if err != nil {
+		if errors.IsNotFound(err) {
+			// TODO: stop metric fetcher?
+			l.Info("Stopping status syncer", "req", req)
+
+			// Object not found, return.  Created objects are automatically garbage collected.
+			// For additional cleanup logic use finalizers.
+			return reconcile.Result{}, nil
+		}
+
 		r.Log.Error(err, "failed to get autoscaler")
 		return ctrl.Result{}, err
 	}
 
-	credentialsJSON, err := r.getCredentialsJSON(req.NamespacedName)
+	credentialsJSON, err := r.getCredentialsJSON(autoscaler.Spec.ServiceAccountSecretRef, autoscaler.Namespace)
 
 	if err != nil {
 		r.Log.Error(err, "failed to get credentials")
@@ -156,35 +168,29 @@ func (r *BigtableAutoscalerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 	return ctrl.Result{}, nil
 }
 
-func (r *BigtableAutoscalerReconciler) getCredentialsJSON(namespacedName types.NamespacedName) ([]byte, error) {
-	autoscaler, err := r.getAutoscaler(namespacedName)
-
-	if err != nil {
-		r.Log.Error(err, "failed to get autoscaler")
-		return nil, err
-	}
-
-	ctx := context.Background()
-
-	secretRef := autoscaler.Spec.ServiceAccountSecretRef
+func (r *BigtableAutoscalerReconciler) getCredentialsJSON(secretRef bigtablev1.ServiceAccountSecretRef, autoscalerNamespace string) ([]byte, error) {
 	var namespace string
+
 	if secretRef.Namespace == nil || *secretRef.Namespace == "" {
-		namespace = autoscaler.Namespace
+		namespace = autoscalerNamespace
 	} else {
 		namespace = *secretRef.Namespace
 	}
 
 	var secret corev1.Secret
+	ctx := context.Background()
 	key := ctrlclient.ObjectKey{
 		Name:      *secretRef.Name,
 		Namespace: namespace,
 	}
+
 	if err := r.APIReader.Get(ctx, key, &secret); err != nil {
 		if apierrors.IsNotFound(err) {
 			r.Log.Info(err.Error())
 		}
 		r.Log.Info(err.Error())
 	}
+
 	credentialsJSON := secret.Data[*secretRef.Key]
 
 	return credentialsJSON, nil
@@ -192,10 +198,8 @@ func (r *BigtableAutoscalerReconciler) getCredentialsJSON(namespacedName types.N
 
 func (r *BigtableAutoscalerReconciler) getAutoscaler(namespacedName types.NamespacedName) (*bigtablev1.BigtableAutoscaler, error) {
 	var autoscaler bigtablev1.BigtableAutoscaler
-	ctx := context.Background()
 
-	if err := r.Client.Get(ctx, namespacedName, &autoscaler); err != nil {
-		err = ctrlclient.IgnoreNotFound(err)
+	if err := r.Client.Get(context.Background(), namespacedName, &autoscaler); err != nil {
 		if err != nil {
 			r.Log.Error(err, "failed to get bigtable-autoscaler")
 			return nil, err
