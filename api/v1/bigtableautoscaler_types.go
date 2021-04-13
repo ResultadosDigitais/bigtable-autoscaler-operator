@@ -55,6 +55,10 @@ type BigtableAutoscalerSpec struct {
 	// target average CPU utilization for Bigtable.
 	TargetCPUUtilization *int32 `json:"targetCPUUtilization"`
 
+	// reference to the bigtable cluster to be autoscaled
+	BigtableClusterRef BigtableClusterRef `json:"bigtableClusterRef"`
+
+	// reference to the service account to be used to get bigtable metrics
 	ServiceAccountSecretRef ServiceAccountSecretRef `json:"serviceAccountSecretRef"`
 }
 

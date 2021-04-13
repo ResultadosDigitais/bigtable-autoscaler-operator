@@ -45,6 +45,16 @@ spec:
           spec:
             description: BigtableAutoscalerSpec defines the desired state of BigtableAutoscaler
             properties:
+              bigtableClusterRef:
+                description: reference to the bigtable cluster to be autoscaled
+                properties:
+                  clusterId:
+                    type: string
+                  instanceId:
+                    type: string
+                  projectId:
+                    type: string
+                type: object
               maxNodes:
                 description: upper limit for the number of nodes that can be set by the autoscaler. It cannot be smaller than MinNodes.
                 format: int32
@@ -61,6 +71,7 @@ spec:
                 minimum: 1
                 type: integer
               serviceAccountSecretRef:
+                description: reference to the service account to be used to get bigtable metrics
                 properties:
                   key:
                     minLength: 1
@@ -79,6 +90,7 @@ spec:
                 format: int32
                 type: integer
             required:
+            - bigtableClusterRef
             - maxNodes
             - minNodes
             - serviceAccountSecretRef
