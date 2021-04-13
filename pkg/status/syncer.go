@@ -7,33 +7,29 @@ import (
 	"time"
 
 	bigtablev1 "bigtable-autoscaler.com/m/v2/api/v1"
-	"bigtable-autoscaler.com/m/v2/pkg/interfaces"
+	"bigtable-autoscaler.com/m/v2/pkg/googlecloud"
 	"github.com/go-logr/logr"
 	"golang.org/x/sync/errgroup"
-	ctrlclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 const optimisticLockError = "the object has been modified; please apply your changes to the latest version and try again"
 const tickTime = 3 * time.Second
 
-// Make sure the writer complies with its interface.
-var _ (interfaces.WriterWrapper) = (ctrlclient.StatusWriter)(nil)
-
 type syncer struct {
 	ctx               context.Context
-	statusWriter      interfaces.WriterWrapper
+	statusWriter      Writer
 	autoscaler        *bigtablev1.BigtableAutoscaler
-	googleCloudClient interfaces.GoogleCloudClient
+	googleCloudClient googlecloud.GoogleCloudClient
 	clusterID         string
 	log               logr.Logger
 }
 
 func NewSyncer(
 	ctx context.Context,
-	statusWriter interfaces.WriterWrapper,
+	statusWriter Writer,
 	autoscaler *bigtablev1.BigtableAutoscaler,
-	googleCloundClient interfaces.GoogleCloudClient, clusterID string, log logr.Logger,
-) (*syncer, error) {
+	googleCloundClient googlecloud.GoogleCloudClient, clusterID string, log logr.Logger,
+) *syncer {
 	if autoscaler.Status.CurrentCPUUtilization == nil {
 		var cpuUsage int32
 		autoscaler.Status.CurrentCPUUtilization = &cpuUsage
@@ -46,7 +42,7 @@ func NewSyncer(
 		googleCloudClient: googleCloundClient,
 		clusterID:         clusterID,
 		log:               log,
-	}, nil
+	}
 }
 
 func (s *syncer) Start() {
@@ -82,6 +78,7 @@ func (s *syncer) Start() {
 				return fmt.Errorf("failed to update autoscaler status: %w", err)
 			}
 		}
+
 		return nil
 	})
 }

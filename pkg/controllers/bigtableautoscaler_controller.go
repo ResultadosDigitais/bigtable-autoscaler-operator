@@ -93,16 +93,13 @@ func (r *BigtableAutoscalerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 		return ctrl.Result{}, err
 	}
 
-	googleCloudClient, err := googlecloud.NewClient(ctx, credentialsJSON, "cdp-development", "clustering-engine")
+	googleCloudClient, err := googlecloud.NewClientFromCredentials(ctx, credentialsJSON, "cdp-development", "clustering-engine")
 	if err != nil {
 		return ctrl.Result{}, err
 	}
 
 	if !r.fetcherStarted {
-		statusSyncer, err := status.NewSyncer(ctx, r.Client.Status(), autoscaler, googleCloudClient, "clustering-engine-c1", r.Log)
-		if err != nil {
-			return ctrl.Result{}, err
-		}
+		statusSyncer := status.NewSyncer(ctx, r.Client.Status(), autoscaler, googleCloudClient, "clustering-engine-c1", r.Log)
 		statusSyncer.Start()
 		r.fetcherStarted = true
 	}
