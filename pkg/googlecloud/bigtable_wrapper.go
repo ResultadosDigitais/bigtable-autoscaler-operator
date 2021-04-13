@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"bigtable-autoscaler.com/m/v2/pkg/interfaces"
 	"cloud.google.com/go/bigtable"
 )
 
@@ -25,17 +24,17 @@ func (c *clusterInfoWrapper) ServerNodes() int32 {
 }
 
 // Make sure the wrapper complies with its interface.
-var _ interfaces.ClusterInfoWrapper = (*clusterInfoWrapper)(nil)
+var _ ClusterInfoWrapper = (*clusterInfoWrapper)(nil)
 
 func (b *bigtableClientWrapper) Clusters(
 	ctx context.Context, instanceID string,
-) ([]interfaces.ClusterInfoWrapper, error) {
+) ([]ClusterInfoWrapper, error) {
 	clustersInfo, err := b.bigtableClient.Clusters(ctx, instanceID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find clusters info for instanceID %s: %w", instanceID, err)
 	}
 
-	clustersInfoWrapped := []interfaces.ClusterInfoWrapper{}
+	clustersInfoWrapped := []ClusterInfoWrapper{}
 
 	for _, clusterInfo := range clustersInfo {
 		clusterInfoWrapped := clusterInfoWrapper{
@@ -49,4 +48,4 @@ func (b *bigtableClientWrapper) Clusters(
 }
 
 // Make sure the wrapper complies with its interface.
-var _ interfaces.BigtableClientWrapper = (*bigtableClientWrapper)(nil)
+var _ BigtableClientWrapper = (*bigtableClientWrapper)(nil)

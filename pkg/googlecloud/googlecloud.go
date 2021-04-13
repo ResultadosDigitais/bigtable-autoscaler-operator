@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"time"
 
-	"bigtable-autoscaler.com/m/v2/pkg/interfaces"
 	"cloud.google.com/go/bigtable"
 	monitoring "cloud.google.com/go/monitoring/apiv3"
 	"github.com/golang/protobuf/ptypes/timestamp"
@@ -17,14 +16,14 @@ import (
 )
 
 type googleCloudClient struct {
-	metricsClient  interfaces.MetricClientWrapper
-	bigtableClient interfaces.BigtableClientWrapper
+	metricsClient  MetricClientWrapper
+	bigtableClient BigtableClientWrapper
 	projectID      string
 	instanceID     string
 	ctx            context.Context
 }
 
-func NewClient(ctx context.Context, credentialsJSON []byte, projectID, instanceID string) (interfaces.GoogleCloudClient, error) {
+func NewClient(ctx context.Context, credentialsJSON []byte, projectID, instanceID string) (GoogleCloudClient, error) {
 	metricClient, err := monitoring.NewMetricClient(ctx, option.WithCredentialsJSON(credentialsJSON))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create metrics client: %w", err)
@@ -41,13 +40,18 @@ func NewClient(ctx context.Context, credentialsJSON []byte, projectID, instanceI
 		bigtableClient: bigtableClient,
 	}
 
+	return ClientBuilder(ctx, projectID, instanceID, &metricClientWrapped, &bigtableClientWrapped), nil
+}
+
+func ClientBuilder(ctx context.Context, projectID, instanceID string, metricClientWrapped MetricClientWrapper,
+	bigtableClientWrapped BigtableClientWrapper) GoogleCloudClient {
 	return &googleCloudClient{
-		metricsClient:  &metricClientWrapped,
-		bigtableClient: &bigtableClientWrapped,
+		metricsClient:  metricClientWrapped,
+		bigtableClient: bigtableClientWrapped,
 		projectID:      projectID,
 		instanceID:     instanceID,
 		ctx:            ctx,
-	}, nil
+	}
 }
 
 func (m *googleCloudClient) GetCurrentCPULoad() (int32, error) {
@@ -99,4 +103,4 @@ func (m *googleCloudClient) GetCurrentNodeCount(clusterID string) (int32, error)
 }
 
 // Make sure the real implementation complies with its interface.
-var _ interfaces.GoogleCloudClient = (*googleCloudClient)(nil)
+var _ GoogleCloudClient = (*googleCloudClient)(nil)

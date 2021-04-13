@@ -24,6 +24,6 @@ type BigtableClientWrapper interface {
 }
 
 type ClusterInfoWrapper interface {
-	Name() (string)
-	ServerNodes() (int32)
+	Name() string
+	ServerNodes() int32
 }
