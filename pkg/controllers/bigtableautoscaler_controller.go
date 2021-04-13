@@ -43,7 +43,8 @@ import (
 
 // BigtableAutoscalerReconciler reconciles a BigtableAutoscaler object
 type BigtableAutoscalerReconciler struct {
-	Client    ctrlclient.Client
+	ctrlclient.Client
+
 	APIReader ctrlclient.Reader
 	Log       logr.Logger
 	Scheme    *runtime.Scheme
@@ -108,7 +109,7 @@ func (r *BigtableAutoscalerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 	}
 
 	if !autoscaler.FetcherStarted {
-		statusSyncer := status.NewSyncer(ctx, r.Client.Status(), autoscaler, googleCloudClient, "clustering-engine-c1", r.Log)
+		statusSyncer := status.NewSyncer(ctx, r.Status(), autoscaler, googleCloudClient, "clustering-engine-c1", r.Log)
 		statusSyncer.Start()
 
 		autoscaler.FetcherStarted = true
@@ -148,13 +149,13 @@ func (r *BigtableAutoscalerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 		r.Log.Info("Updating last scale time")
 		autoscaler.Status.LastScaleTime = &metav1.Time{Time: now}
 		r.Log.Info("Metric read", "Increasing node count to", desiredNodes)
-		err := scaleNodes(credentialsJSON, "cdp-development", "clustering-engine", "clustering-engine-c1", desiredNodes)
+		err := scaleNodes(ctx, credentialsJSON, "cdp-development", "clustering-engine", "clustering-engine-c1", desiredNodes)
 		if err != nil {
 			r.Log.Error(err, "failed to update nodes")
 		}
 	}
 
-	if err = r.Client.Status().Update(ctx, autoscaler); err != nil {
+	if err = r.Status().Update(ctx, autoscaler); err != nil {
 		if strings.Contains(err.Error(), optimisticLockErrorMsg) {
 			r.Log.Info("opsi, temos um problema de concorrencia")
 			return ctrl.Result{RequeueAfter: time.Second * 1}, nil
@@ -197,7 +198,7 @@ func (r *BigtableAutoscalerReconciler) getCredentialsJSON(secretRef bigtablev1.S
 func (r *BigtableAutoscalerReconciler) getAutoscaler(namespacedName types.NamespacedName) (*bigtablev1.BigtableAutoscaler, error) {
 	var autoscaler bigtablev1.BigtableAutoscaler
 
-	if err := r.Client.Get(context.Background(), namespacedName, &autoscaler); err != nil {
+	if err := r.Get(context.Background(), namespacedName, &autoscaler); err != nil {
 		if err != nil {
 			r.Log.Error(err, "failed to get bigtable-autoscaler")
 			return nil, err
