@@ -49,7 +49,8 @@ type BigtableAutoscalerReconciler struct {
 	Log       logr.Logger
 	Scheme    *runtime.Scheme
 
-	clock clock.Clock
+	syncers map[types.NamespacedName]*status.Syncer
+	clock   clock.Clock
 }
 
 const optimisticLockErrorMsg = "the object has been modified; please apply your changes to the latest version and try again"
@@ -65,6 +66,7 @@ func NewBigtableReconciler(
 		APIReader: reader,
 		Scheme:    scheme,
 		Log:       ctrl.Log.WithName("controllers").WithName("BigtableAutoscaler"),
+		syncers:   make(map[types.NamespacedName]*status.Syncer),
 	}
 
 	return r
@@ -77,14 +79,11 @@ func (r *BigtableAutoscalerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 	ctx := context.Background()
 	r.clock = clock.RealClock{}
 
-	l := ctrl.Log.WithName("WIP")
-
 	autoscaler, err := r.getAutoscaler(ctx, req.NamespacedName)
 
 	if err != nil {
 		if errors.IsNotFound(err) {
-			// TODO: stop metric fetcher?
-			l.Info("Stopping status syncer", "req", req)
+			delete(r.syncers, req.NamespacedName)
 
 			// Object not found, return.  Created objects are automatically garbage collected.
 			// For additional cleanup logic use finalizers.
@@ -107,8 +106,13 @@ func (r *BigtableAutoscalerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 		return ctrl.Result{}, err
 	}
 
-	statusSyncer := status.NewSyncer(ctx, r.Status(), autoscaler, googleCloudClient, "clustering-engine-c1", r.Log)
-	statusSyncer.Start()
+	if _, ok := r.syncers[req.NamespacedName]; !ok {
+		r.Log.Info("Subindo um novo syncer")
+		statusSyncer := status.NewSyncer(ctx, r.Status(), autoscaler, googleCloudClient, "clustering-engine-c1", r.Log)
+		statusSyncer.Start()
+
+		r.syncers[req.NamespacedName] = statusSyncer
+	}
 
 	var defaultMaxScaleDownNodes int32 = 2
 
