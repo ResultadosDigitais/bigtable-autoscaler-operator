@@ -64,8 +64,9 @@ func (s *syncer) Start() {
 
 				return fmt.Errorf("failed to get nodes count: %w", err)
 			}
+
 			s.autoscaler.Status.CurrentNodes = &currentNodes
-			s.log.V(1).Info("Metric read", "cpu utilization", metric, "node count", currentNodes, "autoscaler", s.autoscaler.ObjectMeta.Name)
+			s.log.Info("Metric read", "cpu utilization", metric, "node count", currentNodes, "autoscaler", s.autoscaler.ObjectMeta.Name)
 
 			if err := s.statusWriter.Update(ctx, s.autoscaler); err != nil {
 				if strings.Contains(err.Error(), inexistentResourceError) {
