@@ -25,11 +25,16 @@ type Syncer struct {
 	log               logr.Logger
 }
 
+// TODO: register new specs to sync
+// TODO: remove specs from sync list
+
 func NewSyncer(
 	ctx context.Context,
 	statusWriter Writer,
 	autoscaler *bigtablev1.BigtableAutoscaler,
-	googleCloundClient googlecloud.GoogleCloudClient, clusterID string, log logr.Logger,
+	googleCloundClient googlecloud.GoogleCloudClient,
+	clusterID string,
+	log logr.Logger,
 ) *Syncer {
 	if autoscaler.Status.CurrentCPUUtilization == nil {
 		var cpuUsage int32
