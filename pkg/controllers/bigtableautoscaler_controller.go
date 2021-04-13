@@ -45,10 +45,9 @@ import (
 type BigtableAutoscalerReconciler struct {
 	ctrlclient.Client
 
-	APIReader ctrlclient.Reader
-	Log       logr.Logger
-	Scheme    *runtime.Scheme
-
+	reader  ctrlclient.Reader
+	scheme  *runtime.Scheme
+	log     logr.Logger
 	syncers map[types.NamespacedName]*status.Syncer
 	clock   clock.Clock
 }
@@ -62,11 +61,11 @@ func NewBigtableReconciler(
 ) *BigtableAutoscalerReconciler {
 
 	r := &BigtableAutoscalerReconciler{
-		Client:    client,
-		APIReader: reader,
-		Scheme:    scheme,
-		Log:       ctrl.Log.WithName("controllers").WithName("BigtableAutoscaler"),
-		syncers:   make(map[types.NamespacedName]*status.Syncer),
+		Client:  client,
+		reader:  reader,
+		scheme:  scheme,
+		log:     ctrl.Log.WithName("controllers").WithName("BigtableAutoscaler"),
+		syncers: make(map[types.NamespacedName]*status.Syncer),
 	}
 
 	return r
@@ -90,14 +89,14 @@ func (r *BigtableAutoscalerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 			return ctrl.Result{}, nil
 		}
 
-		r.Log.Error(err, "failed to get autoscaler")
+		r.log.Error(err, "failed to get autoscaler")
 		return ctrl.Result{}, err
 	}
 
 	credentialsJSON, err := r.getCredentialsJSON(ctx, autoscaler.Spec.ServiceAccountSecretRef, autoscaler.Namespace)
 
 	if err != nil {
-		r.Log.Error(err, "failed to get credentials")
+		r.log.Error(err, "failed to get credentials")
 		return ctrl.Result{}, err
 	}
 
@@ -107,7 +106,7 @@ func (r *BigtableAutoscalerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 	}
 
 	if _, ok := r.syncers[req.NamespacedName]; !ok {
-		statusSyncer := status.NewSyncer(ctx, r.Status(), autoscaler, googleCloudClient, "clustering-engine-c1", r.Log)
+		statusSyncer := status.NewSyncer(ctx, r.Status(), autoscaler, googleCloudClient, "clustering-engine-c1", r.log)
 		statusSyncer.Start()
 
 		r.syncers[req.NamespacedName] = statusSyncer
@@ -144,21 +143,21 @@ func (r *BigtableAutoscalerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 		now)
 
 	if needUpdate {
-		r.Log.Info("Updating last scale time")
+		r.log.Info("Updating last scale time")
 		autoscaler.Status.LastScaleTime = &metav1.Time{Time: now}
-		r.Log.Info("Metric read", "Increasing node count to", desiredNodes)
+		r.log.Info("Metric read", "Increasing node count to", desiredNodes)
 		err := scaleNodes(ctx, credentialsJSON, "cdp-development", "clustering-engine", "clustering-engine-c1", desiredNodes)
 		if err != nil {
-			r.Log.Error(err, "failed to update nodes")
+			r.log.Error(err, "failed to update nodes")
 		}
 	}
 
 	if err = r.Status().Update(ctx, autoscaler); err != nil {
 		if strings.Contains(err.Error(), optimisticLockErrorMsg) {
-			r.Log.Info("opsi, temos um problema de concorrencia")
+			r.log.Info("opsi, temos um problema de concorrencia")
 			return ctrl.Result{RequeueAfter: time.Second * 1}, nil
 		}
-		r.Log.Error(err, "failed to update autoscaler status")
+		r.log.Error(err, "failed to update autoscaler status")
 		return ctrl.Result{}, err
 	}
 
@@ -180,11 +179,11 @@ func (r *BigtableAutoscalerReconciler) getCredentialsJSON(ctx context.Context, s
 		Namespace: namespace,
 	}
 
-	if err := r.APIReader.Get(ctx, key, &secret); err != nil {
+	if err := r.reader.Get(ctx, key, &secret); err != nil {
 		if errors.IsNotFound(err) {
-			r.Log.Info(err.Error())
+			r.log.Info(err.Error())
 		}
-		r.Log.Info(err.Error())
+		r.log.Info(err.Error())
 	}
 
 	credentialsJSON := secret.Data[*secretRef.Key]
@@ -197,7 +196,7 @@ func (r *BigtableAutoscalerReconciler) getAutoscaler(ctx context.Context, namesp
 
 	if err := r.Get(ctx, namespacedName, &autoscaler); err != nil {
 		if err != nil {
-			r.Log.Error(err, "failed to get bigtable-autoscaler")
+			r.log.Error(err, "failed to get bigtable-autoscaler")
 			return nil, err
 		}
 	}
@@ -221,11 +220,11 @@ func (r *BigtableAutoscalerReconciler) needUpdateNodes(currentNodes, desiredNode
 
 	switch {
 	case desiredNodes == currentNodes:
-		r.Log.Info("the desired number of nodes is equal to that of the current; no need to scale nodes")
+		r.log.Info("the desired number of nodes is equal to that of the current; no need to scale nodes")
 		return false
 
 	case desiredNodes > currentNodes && now.Before(lastScaleTime.Time.Add(scaleUpInterval)):
-		r.Log.Info("too short to scale up since instance scaled nodes last",
+		r.log.Info("too short to scale up since instance scaled nodes last",
 			"now", now.String(),
 			"last scale time", lastScaleTime,
 		)
@@ -233,7 +232,7 @@ func (r *BigtableAutoscalerReconciler) needUpdateNodes(currentNodes, desiredNode
 		return false
 
 	case desiredNodes < currentNodes && now.Before(lastScaleTime.Time.Add(scaleDownInterval)):
-		r.Log.Info("too short to scale down since instance scaled nodes last",
+		r.log.Info("too short to scale down since instance scaled nodes last",
 			"now", now.String(),
 			"last scale time", lastScaleTime,
 		)
@@ -241,7 +240,7 @@ func (r *BigtableAutoscalerReconciler) needUpdateNodes(currentNodes, desiredNode
 		return false
 
 	default:
-		r.Log.Info("Should update nodes")
+		r.log.Info("Should update nodes")
 		return true
 	}
 }
