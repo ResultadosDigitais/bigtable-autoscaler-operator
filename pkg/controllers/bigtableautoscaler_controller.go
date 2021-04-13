@@ -25,7 +25,7 @@ import (
 	"google.golang.org/api/option"
 
 	corev1 "k8s.io/api/core/v1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/clock"
@@ -183,7 +183,7 @@ func (r *BigtableAutoscalerReconciler) getCredentialsJSON(secretRef bigtablev1.S
 	}
 
 	if err := r.APIReader.Get(ctx, key, &secret); err != nil {
-		if apierrors.IsNotFound(err) {
+		if errors.IsNotFound(err) {
 			r.Log.Info(err.Error())
 		}
 		r.Log.Info(err.Error())
