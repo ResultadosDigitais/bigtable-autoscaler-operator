@@ -78,9 +78,8 @@ func (r *BigtableAutoscalerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 	r.clock = clock.RealClock{}
 
 	l := ctrl.Log.WithName("WIP")
-	l.Info("Reconciling", "req", req)
 
-	autoscaler, err := r.getAutoscaler(req.NamespacedName)
+	autoscaler, err := r.getAutoscaler(ctx, req.NamespacedName)
 
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -96,7 +95,7 @@ func (r *BigtableAutoscalerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 		return ctrl.Result{}, err
 	}
 
-	credentialsJSON, err := r.getCredentialsJSON(autoscaler.Spec.ServiceAccountSecretRef, autoscaler.Namespace)
+	credentialsJSON, err := r.getCredentialsJSON(ctx, autoscaler.Spec.ServiceAccountSecretRef, autoscaler.Namespace)
 
 	if err != nil {
 		r.Log.Error(err, "failed to get credentials")
@@ -167,7 +166,7 @@ func (r *BigtableAutoscalerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 	return ctrl.Result{}, nil
 }
 
-func (r *BigtableAutoscalerReconciler) getCredentialsJSON(secretRef bigtablev1.ServiceAccountSecretRef, autoscalerNamespace string) ([]byte, error) {
+func (r *BigtableAutoscalerReconciler) getCredentialsJSON(ctx context.Context, secretRef bigtablev1.ServiceAccountSecretRef, autoscalerNamespace string) ([]byte, error) {
 	var namespace string
 
 	if secretRef.Namespace == nil || *secretRef.Namespace == "" {
@@ -177,7 +176,6 @@ func (r *BigtableAutoscalerReconciler) getCredentialsJSON(secretRef bigtablev1.S
 	}
 
 	var secret corev1.Secret
-	ctx := context.Background()
 	key := ctrlclient.ObjectKey{
 		Name:      *secretRef.Name,
 		Namespace: namespace,
@@ -195,10 +193,10 @@ func (r *BigtableAutoscalerReconciler) getCredentialsJSON(secretRef bigtablev1.S
 	return credentialsJSON, nil
 }
 
-func (r *BigtableAutoscalerReconciler) getAutoscaler(namespacedName types.NamespacedName) (*bigtablev1.BigtableAutoscaler, error) {
+func (r *BigtableAutoscalerReconciler) getAutoscaler(ctx context.Context, namespacedName types.NamespacedName) (*bigtablev1.BigtableAutoscaler, error) {
 	var autoscaler bigtablev1.BigtableAutoscaler
 
-	if err := r.Get(context.Background(), namespacedName, &autoscaler); err != nil {
+	if err := r.Get(ctx, namespacedName, &autoscaler); err != nil {
 		if err != nil {
 			r.Log.Error(err, "failed to get bigtable-autoscaler")
 			return nil, err
@@ -208,9 +206,7 @@ func (r *BigtableAutoscalerReconciler) getAutoscaler(namespacedName types.Namesp
 	return &autoscaler, nil
 }
 
-func scaleNodes(credentialsJSON []byte, projectID, instanceID, clusterID string, desiredNodes int32) error {
-	ctx := context.Background()
-
+func scaleNodes(ctx context.Context, credentialsJSON []byte, projectID, instanceID, clusterID string, desiredNodes int32) error {
 	client, err := bigtable.NewInstanceAdminClient(ctx, projectID, option.WithCredentialsJSON(credentialsJSON))
 
 	if err != nil {
