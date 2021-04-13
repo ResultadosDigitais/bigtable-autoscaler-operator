@@ -89,7 +89,6 @@ func (r *BigtableAutoscalerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 			// Object not found, return.  Created objects are automatically garbage collected.
 			// For additional cleanup logic use finalizers.
 			return ctrl.Result{}, nil
-
 		}
 
 		r.Log.Error(err, "failed to get autoscaler")
