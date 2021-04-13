@@ -55,7 +55,6 @@ func (s *syncer) Start() {
 			if err != nil {
 				return fmt.Errorf("failed to get metrics: %w", err)
 			}
-			s.log.V(1).Info("Metric read", "cpu utilization", metric)
 			s.autoscaler.Status.CurrentCPUUtilization = &metric
 
 			currentNodes, err := s.googleCloudClient.GetCurrentNodeCount(s.clusterID)
@@ -65,7 +64,7 @@ func (s *syncer) Start() {
 				return fmt.Errorf("failed to get nodes count: %w", err)
 			}
 			s.autoscaler.Status.CurrentNodes = &currentNodes
-			s.log.V(1).Info("Metric read", "node count", currentNodes)
+			s.log.V(1).Info("Metric read", "cpu utilization", metric, "node count", currentNodes, "autoscaler", s.autoscaler.ObjectMeta.Name)
 
 			if err := s.statusWriter.Update(ctx, s.autoscaler); err != nil {
 				if strings.Contains(err.Error(), optimisticLockError) {
