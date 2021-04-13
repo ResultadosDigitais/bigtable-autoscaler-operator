@@ -95,8 +95,6 @@ type BigtableAutoscaler struct {
 
 	Spec   BigtableAutoscalerSpec   `json:"spec,omitempty"`
 	Status BigtableAutoscalerStatus `json:"status,omitempty"`
-
-	FetcherStarted bool
 }
 
 // +kubebuilder:object:root=true

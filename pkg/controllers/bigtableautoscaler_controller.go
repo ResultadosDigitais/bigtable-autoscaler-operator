@@ -107,12 +107,8 @@ func (r *BigtableAutoscalerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 		return ctrl.Result{}, err
 	}
 
-	if !autoscaler.FetcherStarted {
-		statusSyncer := status.NewSyncer(ctx, r.Status(), autoscaler, googleCloudClient, "clustering-engine-c1", r.Log)
-		statusSyncer.Start()
-
-		autoscaler.FetcherStarted = true
-	}
+	statusSyncer := status.NewSyncer(ctx, r.Status(), autoscaler, googleCloudClient, "clustering-engine-c1", r.Log)
+	statusSyncer.Start()
 
 	var defaultMaxScaleDownNodes int32 = 2
 
