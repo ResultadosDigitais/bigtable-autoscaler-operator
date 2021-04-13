@@ -13,6 +13,7 @@ import (
 )
 
 const optimisticLockError = "the object has been modified; please apply your changes to the latest version and try again"
+const inexistentResourceError = "invalid object"
 const tickTime = 3 * time.Second
 
 type syncer struct {
@@ -67,11 +68,16 @@ func (s *syncer) Start() {
 			s.log.V(1).Info("Metric read", "cpu utilization", metric, "node count", currentNodes, "autoscaler", s.autoscaler.ObjectMeta.Name)
 
 			if err := s.statusWriter.Update(ctx, s.autoscaler); err != nil {
+				if strings.Contains(err.Error(), inexistentResourceError) {
+					s.log.Info("Resource not found")
+					break
+				}
+
 				if strings.Contains(err.Error(), optimisticLockError) {
 					s.log.Info("A minor concurrency error occurred when updating status. We just need to try again.")
-
 					continue
 				}
+
 				s.log.Error(err, "failed to update autoscaler status")
 
 				return fmt.Errorf("failed to update autoscaler status: %w", err)
