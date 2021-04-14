@@ -16,8 +16,14 @@ import (
 	"bigtable-autoscaler.com/m/v2/pkg/status"
 )
 
-func Test_statusSyncer_Start(t *testing.T) {
-	autoscaler := bigtablev1.BigtableAutoscaler{}
+func TestStart(t *testing.T) {
+	autoscaler := bigtablev1.BigtableAutoscaler{
+		Spec: bigtablev1.BigtableAutoscalerSpec{
+			BigtableClusterRef: bigtablev1.BigtableClusterRef{
+				ClusterID: "cluster-id",
+			},
+		},
+	}
 
 	wg := sync.WaitGroup{}
 	wg.Add(1)
@@ -38,7 +44,6 @@ func Test_statusSyncer_Start(t *testing.T) {
 		writer            status.Writer
 		autoscaler        *bigtablev1.BigtableAutoscaler
 		googleCloudClient googlecloud.GoogleCloudClient
-		clusterID         string
 		log               logr.Logger
 	}
 	tests := []struct {
@@ -52,7 +57,6 @@ func Test_statusSyncer_Start(t *testing.T) {
 				writer:            &mockStatusWriter,
 				autoscaler:        &autoscaler,
 				googleCloudClient: &mockGoogleCloudClient,
-				clusterID:         "cluster-id",
 				log:               ctrl.Log.WithName("test runtime"),
 			},
 		},
@@ -64,7 +68,6 @@ func Test_statusSyncer_Start(t *testing.T) {
 				tt.fields.writer,
 				tt.fields.autoscaler,
 				tt.fields.googleCloudClient,
-				tt.fields.clusterID,
 				tt.fields.log,
 			)
 			s.Start()

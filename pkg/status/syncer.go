@@ -21,7 +21,6 @@ type Syncer struct {
 	writer            Writer
 	autoscaler        *bigtablev1.BigtableAutoscaler
 	googleCloudClient googlecloud.GoogleCloudClient
-	clusterID         string
 	log               logr.Logger
 }
 
@@ -33,7 +32,6 @@ func NewSyncer(
 	writer Writer,
 	autoscaler *bigtablev1.BigtableAutoscaler,
 	googleCloudClient googlecloud.GoogleCloudClient,
-	clusterID string,
 	log logr.Logger,
 ) *Syncer {
 	if autoscaler.Status.CurrentCPUUtilization == nil {
@@ -46,7 +44,6 @@ func NewSyncer(
 		writer:            writer,
 		autoscaler:        autoscaler,
 		googleCloudClient: googleCloudClient,
-		clusterID:         clusterID,
 		log:               log,
 	}
 }
@@ -63,7 +60,7 @@ func (s *Syncer) Start() {
 			}
 			s.autoscaler.Status.CurrentCPUUtilization = &currentCpu
 
-			currentNodes, err := s.googleCloudClient.GetCurrentNodeCount(s.clusterID)
+			currentNodes, err := s.googleCloudClient.GetCurrentNodeCount(s.autoscaler.Spec.BigtableClusterRef.ClusterID)
 			if err != nil {
 				s.log.Error(err, "failed to get nodes count")
 
