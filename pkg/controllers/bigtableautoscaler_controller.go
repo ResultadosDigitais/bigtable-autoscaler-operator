@@ -178,41 +178,35 @@ func (r *BigtableAutoscalerReconciler) getCredentialsJSON(ctx context.Context, s
 
 func (r *BigtableAutoscalerReconciler) needUpdateNodes(status *bigtablev1.BigtableAutoscalerStatus, now time.Time) bool {
 	scaleDownInterval := 1 * time.Minute
-	scaleUpInterval := 1 * time.Minute
 
-	if status.CurrentNodes == nil || status.DesiredNodes == nil || status.LastScaleTime == nil {
+	if status.CurrentNodes == nil || status.DesiredNodes == nil {
 		return false
 	}
 
 	currentNodes := *status.CurrentNodes
 	desiredNodes := *status.DesiredNodes
-	lastScaleTime := *status.LastScaleTime
 
-	switch {
-	case desiredNodes == currentNodes:
-		r.log.Info("the desired number of nodes is equal to that of the current; no need to scale nodes")
+	if desiredNodes == currentNodes {
+		r.log.Info("The desired number of nodes is equal to that of the current; no need to scale nodes", "desired", desiredNodes)
 		return false
-
-	case desiredNodes > currentNodes && now.Before(lastScaleTime.Time.Add(scaleUpInterval)):
-		r.log.Info("too short to scale up since instance scaled nodes last",
-			"now", now.String(),
-			"last scale time", lastScaleTime,
-		)
-
-		return false
-
-	case desiredNodes < currentNodes && now.Before(lastScaleTime.Time.Add(scaleDownInterval)):
-		r.log.Info("too short to scale down since instance scaled nodes last",
-			"now", now.String(),
-			"last scale time", lastScaleTime,
-		)
-
-		return false
-
-	default:
-		r.log.Info("Should update nodes")
-		return true
 	}
+
+	if status.LastScaleTime != nil && now.Before(status.LastScaleTime.Time.Add(scaleDownInterval)) {
+		r.log.Info(
+			"Too soon to scale",
+			"time to wait", scaleDownInterval,
+			"now", now.String(),
+			"last scale time", status.LastScaleTime,
+			"desired", desiredNodes,
+			"current", currentNodes,
+		)
+
+		return false
+
+	}
+
+	r.log.Info("The desired number of nodes is different than current: scaling", "desired", desiredNodes, "current", currentNodes)
+	return true
 }
 
 func scaleNodes(ctx context.Context, credentialsJSON []byte, clusterRef *bigtablev1.BigtableClusterRef, desiredNodes int32) error {
