@@ -64,11 +64,11 @@ func TestStart(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := status.NewSyncer(
-				tt.fields.ctx,
 				tt.fields.writer,
 				tt.fields.log,
 			)
 			s.Start(
+				tt.fields.ctx,
 				tt.fields.autoscaler,
 				tt.fields.googleCloudClient,
 			)
