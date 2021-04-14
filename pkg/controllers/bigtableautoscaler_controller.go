@@ -49,7 +49,8 @@ type BigtableAutoscalerReconciler struct {
 	reader  ctrlclient.Reader
 	scheme  *runtime.Scheme
 	log     logr.Logger
-	syncers map[types.NamespacedName]*status.Syncer
+	syncer  *status.Syncer
+	syncers map[types.NamespacedName]bool
 	clock   clock.Clock
 }
 
@@ -61,12 +62,16 @@ func NewBigtableReconciler(
 	scheme *runtime.Scheme,
 ) *BigtableAutoscalerReconciler {
 
+	log := ctrl.Log.WithName("controllers").WithName("BigtableAutoscaler")
+	syncer := status.NewSyncer(client.Status(), log)
+
 	r := &BigtableAutoscalerReconciler{
 		Client:  client,
 		reader:  reader,
 		scheme:  scheme,
-		log:     ctrl.Log.WithName("controllers").WithName("BigtableAutoscaler"),
-		syncers: make(map[types.NamespacedName]*status.Syncer),
+		log:     log,
+		syncer:  syncer,
+		syncers: make(map[types.NamespacedName]bool),
 	}
 
 	return r
@@ -106,10 +111,9 @@ func (r *BigtableAutoscalerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 			return ctrl.Result{}, fmt.Errorf("failed to initialize googlecloud client: %w", err)
 		}
 
-		statusSyncer := status.NewSyncer(ctx, r.Status(), r.log)
-		statusSyncer.Start(autoscaler, googleCloudClient)
+		r.syncer.Start(ctx, autoscaler, googleCloudClient)
 
-		r.syncers[req.NamespacedName] = statusSyncer
+		r.syncers[req.NamespacedName] = true
 	}
 
 	var defaultMaxScaleDownNodes int32 = 2

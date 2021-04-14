@@ -17,7 +17,6 @@ const inexistentResourceError = "invalid object"
 const tickTime = 3 * time.Second
 
 type Syncer struct {
-	ctx    context.Context
 	writer Writer
 	log    logr.Logger
 }
@@ -30,23 +29,19 @@ type syncerInstance struct {
 // TODO: register new specs to sync
 // TODO: remove specs from sync list
 
-func NewSyncer(
-	ctx context.Context,
-	writer Writer,
-	log logr.Logger,
-) *Syncer {
+func NewSyncer(writer Writer, log logr.Logger) *Syncer {
 	return &Syncer{
-		ctx:    ctx,
 		writer: writer,
 		log:    log,
 	}
 }
 
 func (s *Syncer) Start(
+	ctx context.Context,
 	autoscaler *bigtablev1.BigtableAutoscaler,
 	googleCloudClient googlecloud.GoogleCloudClient,
 ) {
-	eg, ctx := errgroup.WithContext(s.ctx)
+	eg, ctx := errgroup.WithContext(ctx)
 
 	eg.Go(func() error {
 		ticker := time.NewTicker(tickTime)
