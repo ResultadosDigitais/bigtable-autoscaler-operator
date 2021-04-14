@@ -55,23 +55,30 @@ type BigtableAutoscalerSpec struct {
 	// target average CPU utilization for Bigtable.
 	TargetCPUUtilization *int32 `json:"targetCPUUtilization"`
 
+	// reference to the bigtable cluster to be autoscaled
+	BigtableClusterRef BigtableClusterRef `json:"bigtableClusterRef"`
+
+	// reference to the service account to be used to get bigtable metrics
 	ServiceAccountSecretRef ServiceAccountSecretRef `json:"serviceAccountSecretRef"`
 }
 
 // BigtableAutoscalerStatus defines the observed state of BigtableAutoscaler
 type BigtableAutoscalerStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	LastScaleTime *metav1.Time `json:"lastScaleTime,omitempty"`
+	LastScaleTime         *metav1.Time `json:"lastScaleTime,omitempty"`
+	LastFetchTime         *metav1.Time `json:"lastFetchTime,omitempty"`
+	CurrentNodes          *int32       `json:"currentNodes,omitempty"`
+	DesiredNodes          *int32       `json:"desiredNodes,omitempty"`
+	CurrentCPUUtilization *int32       `json:"CPUUtilization,omitempty"`
+}
 
-	LastFetchTime *metav1.Time `json:"lastFetchTime,omitempty"`
+type BigtableClusterRef struct {
+	// Important: Run "make" to regenerate code after modifying this file
 
-	CurrentNodes *int32 `json:"currentNodes,omitempty"`
-
-	DesiredNodes *int32 `json:"desiredNodes,omitempty"`
-
-	CurrentCPUUtilization *int32 `json:"CPUUtilization,omitempty"`
+	ProjectID  string `json:"projectId,omitempty"`
+	InstanceID string `json:"instanceId,omitempty"`
+	ClusterID  string `json:"clusterId,omitempty"`
 }
 
 // +kubebuilder:object:root=true

@@ -13,9 +13,10 @@ import (
 )
 
 const optimisticLockError = "the object has been modified; please apply your changes to the latest version and try again"
+const inexistentResourceError = "invalid object"
 const tickTime = 3 * time.Second
 
-type syncer struct {
+type Syncer struct {
 	ctx               context.Context
 	statusWriter      Writer
 	autoscaler        *bigtablev1.BigtableAutoscaler
@@ -24,18 +25,23 @@ type syncer struct {
 	log               logr.Logger
 }
 
+// TODO: register new specs to sync
+// TODO: remove specs from sync list
+
 func NewSyncer(
 	ctx context.Context,
 	statusWriter Writer,
 	autoscaler *bigtablev1.BigtableAutoscaler,
-	googleCloundClient googlecloud.GoogleCloudClient, clusterID string, log logr.Logger,
-) *syncer {
+	googleCloundClient googlecloud.GoogleCloudClient,
+	clusterID string,
+	log logr.Logger,
+) *Syncer {
 	if autoscaler.Status.CurrentCPUUtilization == nil {
 		var cpuUsage int32
 		autoscaler.Status.CurrentCPUUtilization = &cpuUsage
 	}
 
-	return &syncer{
+	return &Syncer{
 		ctx:               ctx,
 		statusWriter:      statusWriter,
 		autoscaler:        autoscaler,
@@ -45,18 +51,17 @@ func NewSyncer(
 	}
 }
 
-func (s *syncer) Start() {
+func (s *Syncer) Start() {
 	eg, ctx := errgroup.WithContext(s.ctx)
 
 	eg.Go(func() error {
 		ticker := time.NewTicker(tickTime)
 		for ; true; <-ticker.C {
-			metric, err := s.googleCloudClient.GetCurrentCPULoad()
+			currentCpu, err := s.googleCloudClient.GetCurrentCPULoad()
 			if err != nil {
 				return fmt.Errorf("failed to get metrics: %w", err)
 			}
-			s.log.V(1).Info("Metric read", "cpu utilization", metric)
-			s.autoscaler.Status.CurrentCPUUtilization = &metric
+			s.autoscaler.Status.CurrentCPUUtilization = &currentCpu
 
 			currentNodes, err := s.googleCloudClient.GetCurrentNodeCount(s.clusterID)
 			if err != nil {
@@ -64,15 +69,21 @@ func (s *syncer) Start() {
 
 				return fmt.Errorf("failed to get nodes count: %w", err)
 			}
+
 			s.autoscaler.Status.CurrentNodes = &currentNodes
-			s.log.V(1).Info("Metric read", "node count", currentNodes)
+			s.log.Info("Metric read", "cpu utilization", currentCpu, "node count", currentNodes, "autoscaler", s.autoscaler.ObjectMeta.Name)
 
 			if err := s.statusWriter.Update(ctx, s.autoscaler); err != nil {
+				if strings.Contains(err.Error(), inexistentResourceError) {
+					s.log.Info("Resource not found")
+					break
+				}
+
 				if strings.Contains(err.Error(), optimisticLockError) {
 					s.log.Info("A minor concurrency error occurred when updating status. We just need to try again.")
-
 					continue
 				}
+
 				s.log.Error(err, "failed to update autoscaler status")
 
 				return fmt.Errorf("failed to update autoscaler status: %w", err)

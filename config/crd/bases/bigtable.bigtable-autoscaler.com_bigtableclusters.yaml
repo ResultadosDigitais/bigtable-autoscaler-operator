@@ -6,33 +6,19 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.5.0
   creationTimestamp: null
-  name: bigtableautoscalers.bigtable.bigtable-autoscaler.com
+  name: bigtableclusters.bigtable.bigtable-autoscaler.com
 spec:
   group: bigtable.bigtable-autoscaler.com
   names:
-    kind: BigtableAutoscaler
-    listKind: BigtableAutoscalerList
-    plural: bigtableautoscalers
-    singular: bigtableautoscaler
+    kind: BigtableCluster
+    listKind: BigtableClusterList
+    plural: bigtableclusters
+    singular: bigtablecluster
   scope: Namespaced
   versions:
-  - additionalPrinterColumns:
-    - jsonPath: .status.currentNodes
-      name: nodes
-      type: string
-    - jsonPath: .status.desiredNodes
-      name: desired_nodes
-      type: string
-    - jsonPath: .status.CPUUtilization
-      name: cpu_usage
-      type: string
-    - jsonPath: .spec.targetCPUUtilization
-      name: target_cpu
-      type: string
-    name: v1
+  - name: v1
     schema:
       openAPIV3Schema:
-        description: BigtableAutoscaler is the Schema for the bigtableautoscalers API
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
@@ -45,16 +31,6 @@ spec:
           spec:
             description: BigtableAutoscalerSpec defines the desired state of BigtableAutoscaler
             properties:
-              bigtableClusterRef:
-                description: reference to the bigtable cluster to be autoscaled
-                properties:
-                  clusterId:
-                    type: string
-                  instanceId:
-                    type: string
-                  projectId:
-                    type: string
-                type: object
               maxNodes:
                 description: upper limit for the number of nodes that can be set by the autoscaler. It cannot be smaller than MinNodes.
                 format: int32
@@ -71,7 +47,6 @@ spec:
                 minimum: 1
                 type: integer
               serviceAccountSecretRef:
-                description: reference to the service account to be used to get bigtable metrics
                 properties:
                   key:
                     minLength: 1
@@ -90,7 +65,6 @@ spec:
                 format: int32
                 type: integer
             required:
-            - bigtableClusterRef
             - maxNodes
             - minNodes
             - serviceAccountSecretRef
@@ -118,8 +92,6 @@ spec:
         type: object
     served: true
     storage: true
-    subresources:
-      status: {}
 status:
   acceptedNames:
     kind: ""
