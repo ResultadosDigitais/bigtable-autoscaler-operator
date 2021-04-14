@@ -19,20 +19,14 @@ const tickTime = 3 * time.Second
 
 type Syncer struct {
 	writer  Writer
-	running map[types.UID]bool
+	running map[types.UID]chan bool
 	log     logr.Logger
 }
-
-type syncerInstance struct {
-}
-
-// TODO: register new specs to sync
-// TODO: remove specs from sync list
 
 func NewSyncer(writer Writer, log logr.Logger) *Syncer {
 	return &Syncer{
 		writer:  writer,
-		running: make(map[types.UID]bool),
+		running: make(map[types.UID]chan bool),
 		log:     log,
 	}
 }
@@ -42,50 +36,57 @@ func (s *Syncer) Register(
 	autoscaler *bigtablev1.BigtableAutoscaler,
 	googleCloudClient googlecloud.GoogleCloudClient,
 ) {
-	eg, ctx := errgroup.WithContext(ctx)
-
-	if _, ok := s.running[autoscaler.UID]; ok {
-		return
+	if previous_ch, ok := s.running[autoscaler.UID]; ok {
+		previous_ch <- true
 	}
 
-	s.running[autoscaler.UID] = true
+	ch := make(chan bool, 1)
+	s.running[autoscaler.UID] = ch
 
+	eg, ctx := errgroup.WithContext(ctx)
 	eg.Go(func() error {
 		ticker := time.NewTicker(tickTime)
-		for ; true; <-ticker.C {
-			currentCpu, err := googleCloudClient.GetCurrentCPULoad()
-			if err != nil {
-				return fmt.Errorf("failed to get metrics: %w", err)
-			}
-			autoscaler.Status.CurrentCPUUtilization = &currentCpu
 
-			currentNodes, err := googleCloudClient.GetCurrentNodeCount(autoscaler.Spec.BigtableClusterRef.ClusterID)
-			if err != nil {
-				s.log.Error(err, "failed to get nodes count")
+		for {
+			select {
+			case <-ticker.C:
+				currentCpu, err := googleCloudClient.GetCurrentCPULoad()
+				if err != nil {
+					return fmt.Errorf("failed to get metrics: %w", err)
+				}
+				autoscaler.Status.CurrentCPUUtilization = &currentCpu
 
-				return fmt.Errorf("failed to get nodes count: %w", err)
-			}
+				currentNodes, err := googleCloudClient.GetCurrentNodeCount(autoscaler.Spec.BigtableClusterRef.ClusterID)
+				if err != nil {
+					s.log.Error(err, "failed to get nodes count")
 
-			autoscaler.Status.CurrentNodes = &currentNodes
-			s.log.Info("Metric read", "cpu utilization", currentCpu, "node count", currentNodes, "autoscaler", autoscaler.ObjectMeta.Name)
-
-			if err := s.writer.Update(ctx, autoscaler); err != nil {
-				if strings.Contains(err.Error(), inexistentResourceError) {
-					s.log.Info("Resource not found")
-					break
+					return fmt.Errorf("failed to get nodes count: %w", err)
 				}
 
-				if strings.Contains(err.Error(), optimisticLockError) {
-					s.log.Error(err, "A minor concurrency error occurred when updating status. We just need to try again.")
-					continue
+				autoscaler.Status.CurrentNodes = &currentNodes
+				s.log.Info("Metric read", "cpu utilization", currentCpu, "node count", currentNodes, "autoscaler", autoscaler.ObjectMeta.Name)
+
+				if err := s.writer.Update(ctx, autoscaler); err != nil {
+					if strings.Contains(err.Error(), inexistentResourceError) {
+						s.log.Info("Resource not found")
+						return nil
+					}
+
+					if strings.Contains(err.Error(), optimisticLockError) {
+						s.log.Error(err, "A minor concurrency error occurred when updating status. We just need to try again.")
+						continue
+					}
+
+					s.log.Error(err, "failed to update autoscaler status")
+
+					return fmt.Errorf("failed to update autoscaler status: %w", err)
 				}
 
-				s.log.Error(err, "failed to update autoscaler status")
+			case <-ch:
+				s.log.Info("Interrupted sync from previous version")
+				return nil
 
-				return fmt.Errorf("failed to update autoscaler status: %w", err)
 			}
 		}
-
-		return nil
 	})
 }
