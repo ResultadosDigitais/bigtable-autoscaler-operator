@@ -27,7 +27,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/clock"
 	ctrl "sigs.k8s.io/controller-runtime"
 	ctrlclient "sigs.k8s.io/controller-runtime/pkg/client"
@@ -87,9 +86,8 @@ func (r *BigtableAutoscalerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 	ctx := context.Background()
 	r.clock = clock.RealClock{}
 
-	autoscaler, err := r.getAutoscaler(ctx, req.NamespacedName)
-
-	if err != nil {
+	var autoscaler bigtablev1.BigtableAutoscaler
+	if err := r.Get(ctx, req.NamespacedName, &autoscaler); err != nil {
 		if errors.IsNotFound(err) {
 			// Object not found, return.  Created objects are automatically garbage collected.
 			// For additional cleanup logic use finalizers.
@@ -112,7 +110,7 @@ func (r *BigtableAutoscalerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 		return ctrl.Result{}, fmt.Errorf("failed to initialize googlecloud client: %w", err)
 	}
 
-	r.syncer.Register(ctx, autoscaler, googleCloudClient)
+	r.syncer.Register(ctx, &autoscaler, googleCloudClient)
 
 	var defaultMaxScaleDownNodes int32 = 2
 
@@ -146,24 +144,11 @@ func (r *BigtableAutoscalerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 		}
 	}
 
-	if err = r.Status().Update(ctx, autoscaler); err != nil {
+	if err = r.Status().Update(ctx, &autoscaler); err != nil {
 		return ctrl.Result{}, fmt.Errorf("failed to update autoscaler status: %w", err)
 	}
 
 	return ctrl.Result{}, nil
-}
-
-func (r *BigtableAutoscalerReconciler) getAutoscaler(ctx context.Context, namespacedName types.NamespacedName) (*bigtablev1.BigtableAutoscaler, error) {
-	var autoscaler bigtablev1.BigtableAutoscaler
-
-	if err := r.Get(ctx, namespacedName, &autoscaler); err != nil {
-		if err != nil {
-			r.log.Error(err, "failed to get bigtable-autoscaler")
-			return nil, err
-		}
-	}
-
-	return &autoscaler, nil
 }
 
 func (r *BigtableAutoscalerReconciler) getCredentialsJSON(ctx context.Context, secretRef bigtablev1.ServiceAccountSecretRef, autoscalerNamespace string) ([]byte, error) {
