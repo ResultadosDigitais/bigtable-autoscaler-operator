@@ -32,7 +32,7 @@ func NewSyncer(
 	ctx context.Context,
 	writer Writer,
 	autoscaler *bigtablev1.BigtableAutoscaler,
-	googleCloundClient googlecloud.GoogleCloudClient,
+	googleCloudClient googlecloud.GoogleCloudClient,
 	clusterID string,
 	log logr.Logger,
 ) *Syncer {
@@ -45,7 +45,7 @@ func NewSyncer(
 		ctx:               ctx,
 		writer:            writer,
 		autoscaler:        autoscaler,
-		googleCloudClient: googleCloundClient,
+		googleCloudClient: googleCloudClient,
 		clusterID:         clusterID,
 		log:               log,
 	}
