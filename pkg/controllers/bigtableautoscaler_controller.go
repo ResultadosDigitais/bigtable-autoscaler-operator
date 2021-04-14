@@ -18,6 +18,7 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
 
@@ -79,7 +80,6 @@ func (r *BigtableAutoscalerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 	r.clock = clock.RealClock{}
 
 	autoscaler, err := r.getAutoscaler(ctx, req.NamespacedName)
-
 	if err != nil {
 		if errors.IsNotFound(err) {
 			delete(r.syncers, req.NamespacedName)
@@ -89,21 +89,18 @@ func (r *BigtableAutoscalerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 			return ctrl.Result{}, nil
 		}
 
-		r.log.Error(err, "failed to get autoscaler")
-		return ctrl.Result{}, err
+		return ctrl.Result{}, fmt.Errorf("failed to get autoscaler: %w", err)
 	}
 
 	credentialsJSON, err := r.getCredentialsJSON(ctx, autoscaler.Spec.ServiceAccountSecretRef, autoscaler.Namespace)
-
 	if err != nil {
-		r.log.Error(err, "failed to get credentials")
-		return ctrl.Result{}, err
+		return ctrl.Result{}, fmt.Errorf("failed to get credentials: %w", err)
 	}
 
 	if _, ok := r.syncers[req.NamespacedName]; !ok {
 		googleCloudClient, err := googlecloud.NewClientFromCredentials(ctx, credentialsJSON, "cdp-development", "clustering-engine")
 		if err != nil {
-			return ctrl.Result{}, err
+			return ctrl.Result{}, fmt.Errorf("failed to initialize googlecloud client: %w", err)
 		}
 
 		statusSyncer := status.NewSyncer(ctx, r.Status(), autoscaler, googleCloudClient, "clustering-engine-c1", r.log)
@@ -158,8 +155,7 @@ func (r *BigtableAutoscalerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 			r.log.Info("opsi, temos um problema de concorrencia")
 			return ctrl.Result{RequeueAfter: time.Second * 1}, nil
 		}
-		r.log.Error(err, "failed to update autoscaler status")
-		return ctrl.Result{}, err
+		return ctrl.Result{}, fmt.Errorf("failed to update autoscaler status: %w", err)
 	}
 
 	return ctrl.Result{}, nil
