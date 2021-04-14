@@ -80,7 +80,6 @@ func (r *BigtableAutoscalerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 	r.clock = clock.RealClock{}
 
 	autoscaler, err := r.getAutoscaler(ctx, req.NamespacedName)
-	clusterRef := autoscaler.Spec.BigtableClusterRef
 
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -93,6 +92,8 @@ func (r *BigtableAutoscalerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 
 		return ctrl.Result{}, fmt.Errorf("failed to get autoscaler: %w", err)
 	}
+
+	clusterRef := autoscaler.Spec.BigtableClusterRef
 
 	credentialsJSON, err := r.getCredentialsJSON(ctx, autoscaler.Spec.ServiceAccountSecretRef, autoscaler.Namespace)
 	if err != nil {
