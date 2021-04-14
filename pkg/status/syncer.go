@@ -15,7 +15,7 @@ import (
 
 const optimisticLockError = "the object has been modified; please apply your changes to the latest version and try again"
 const inexistentResourceError = "invalid object"
-const tickTime = 3 * time.Second
+const tickTime = 5 * time.Second
 
 type Syncer struct {
 	writer  Writer
