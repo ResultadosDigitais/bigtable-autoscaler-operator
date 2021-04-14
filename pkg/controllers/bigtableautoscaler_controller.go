@@ -42,6 +42,8 @@ import (
 	"bigtable-autoscaler.com/m/v2/pkg/status"
 )
 
+const optimisticLockErrorMsg = "the object has been modified; please apply your changes to the latest version and try again"
+
 // BigtableAutoscalerReconciler reconciles a BigtableAutoscaler object
 type BigtableAutoscalerReconciler struct {
 	ctrlclient.Client
@@ -53,8 +55,6 @@ type BigtableAutoscalerReconciler struct {
 	syncers map[types.NamespacedName]bool
 	clock   clock.Clock
 }
-
-const optimisticLockErrorMsg = "the object has been modified; please apply your changes to the latest version and try again"
 
 func NewBigtableReconciler(
 	client ctrlclient.Client,
@@ -75,6 +75,12 @@ func NewBigtableReconciler(
 	}
 
 	return r
+}
+
+func (r *BigtableAutoscalerReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	return ctrl.NewControllerManagedBy(mgr).
+		For(&bigtablev1.BigtableAutoscaler{}).
+		Complete(r)
 }
 
 // +kubebuilder:rbac:groups=bigtable.bigtable-autoscaler.com,resources=bigtableautoscalers,verbs=get;list;watch;create;update;patch;delete
@@ -248,10 +254,4 @@ func (r *BigtableAutoscalerReconciler) needUpdateNodes(currentNodes, desiredNode
 		r.log.Info("Should update nodes")
 		return true
 	}
-}
-
-func (r *BigtableAutoscalerReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewControllerManagedBy(mgr).
-		For(&bigtablev1.BigtableAutoscaler{}).
-		Complete(r)
 }
