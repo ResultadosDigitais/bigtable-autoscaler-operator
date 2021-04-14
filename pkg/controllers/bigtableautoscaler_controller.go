@@ -106,8 +106,8 @@ func (r *BigtableAutoscalerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 			return ctrl.Result{}, fmt.Errorf("failed to initialize googlecloud client: %w", err)
 		}
 
-		statusSyncer := status.NewSyncer(ctx, r.Status(), autoscaler, googleCloudClient, r.log)
-		statusSyncer.Start()
+		statusSyncer := status.NewSyncer(ctx, r.Status(), r.log)
+		statusSyncer.Start(autoscaler, googleCloudClient)
 
 		r.syncers[req.NamespacedName] = statusSyncer
 	}

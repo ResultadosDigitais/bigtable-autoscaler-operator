@@ -66,11 +66,12 @@ func TestStart(t *testing.T) {
 			s := status.NewSyncer(
 				tt.fields.ctx,
 				tt.fields.writer,
-				tt.fields.autoscaler,
-				tt.fields.googleCloudClient,
 				tt.fields.log,
 			)
-			s.Start()
+			s.Start(
+				tt.fields.autoscaler,
+				tt.fields.googleCloudClient,
+			)
 			wg.Wait()
 		})
 	}
