@@ -153,6 +153,19 @@ func (r *BigtableAutoscalerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 	return ctrl.Result{}, nil
 }
 
+func (r *BigtableAutoscalerReconciler) getAutoscaler(ctx context.Context, namespacedName types.NamespacedName) (*bigtablev1.BigtableAutoscaler, error) {
+	var autoscaler bigtablev1.BigtableAutoscaler
+
+	if err := r.Get(ctx, namespacedName, &autoscaler); err != nil {
+		if err != nil {
+			r.log.Error(err, "failed to get bigtable-autoscaler")
+			return nil, err
+		}
+	}
+
+	return &autoscaler, nil
+}
+
 func (r *BigtableAutoscalerReconciler) getCredentialsJSON(ctx context.Context, secretRef bigtablev1.ServiceAccountSecretRef, autoscalerNamespace string) ([]byte, error) {
 	var namespace string
 
@@ -178,29 +191,6 @@ func (r *BigtableAutoscalerReconciler) getCredentialsJSON(ctx context.Context, s
 	credentialsJSON := secret.Data[*secretRef.Key]
 
 	return credentialsJSON, nil
-}
-
-func (r *BigtableAutoscalerReconciler) getAutoscaler(ctx context.Context, namespacedName types.NamespacedName) (*bigtablev1.BigtableAutoscaler, error) {
-	var autoscaler bigtablev1.BigtableAutoscaler
-
-	if err := r.Get(ctx, namespacedName, &autoscaler); err != nil {
-		if err != nil {
-			r.log.Error(err, "failed to get bigtable-autoscaler")
-			return nil, err
-		}
-	}
-
-	return &autoscaler, nil
-}
-
-func scaleNodes(ctx context.Context, credentialsJSON []byte, clusterRef *bigtablev1.BigtableClusterRef, desiredNodes int32) error {
-	client, err := bigtable.NewInstanceAdminClient(ctx, clusterRef.ProjectID, option.WithCredentialsJSON(credentialsJSON))
-
-	if err != nil {
-		return err
-	}
-
-	return client.UpdateCluster(ctx, clusterRef.InstanceID, clusterRef.ClusterID, desiredNodes)
 }
 
 func (r *BigtableAutoscalerReconciler) needUpdateNodes(status *bigtablev1.BigtableAutoscalerStatus, now time.Time) bool {
@@ -240,4 +230,14 @@ func (r *BigtableAutoscalerReconciler) needUpdateNodes(status *bigtablev1.Bigtab
 		r.log.Info("Should update nodes")
 		return true
 	}
+}
+
+func scaleNodes(ctx context.Context, credentialsJSON []byte, clusterRef *bigtablev1.BigtableClusterRef, desiredNodes int32) error {
+	client, err := bigtable.NewInstanceAdminClient(ctx, clusterRef.ProjectID, option.WithCredentialsJSON(credentialsJSON))
+
+	if err != nil {
+		return err
+	}
+
+	return client.UpdateCluster(ctx, clusterRef.InstanceID, clusterRef.ClusterID, desiredNodes)
 }
