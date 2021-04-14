@@ -92,8 +92,6 @@ func (r *BigtableAutoscalerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 
 	if err != nil {
 		if errors.IsNotFound(err) {
-			// delete(r.syncers, req.NamespacedName)
-
 			// Object not found, return.  Created objects are automatically garbage collected.
 			// For additional cleanup logic use finalizers.
 			return ctrl.Result{}, nil
