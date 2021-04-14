@@ -140,7 +140,8 @@ func (r *BigtableAutoscalerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 		*autoscaler.Status.CurrentNodes,
 		*autoscaler.Status.DesiredNodes,
 		*autoscaler.Status.LastScaleTime,
-		now)
+		now,
+	)
 
 	if needUpdate {
 		r.log.Info("Updating last scale time")
