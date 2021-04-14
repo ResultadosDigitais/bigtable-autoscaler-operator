@@ -18,7 +18,7 @@ const tickTime = 3 * time.Second
 
 type Syncer struct {
 	ctx               context.Context
-	statusWriter      Writer
+	writer            Writer
 	autoscaler        *bigtablev1.BigtableAutoscaler
 	googleCloudClient googlecloud.GoogleCloudClient
 	clusterID         string
@@ -30,7 +30,7 @@ type Syncer struct {
 
 func NewSyncer(
 	ctx context.Context,
-	statusWriter Writer,
+	writer Writer,
 	autoscaler *bigtablev1.BigtableAutoscaler,
 	googleCloundClient googlecloud.GoogleCloudClient,
 	clusterID string,
@@ -43,7 +43,7 @@ func NewSyncer(
 
 	return &Syncer{
 		ctx:               ctx,
-		statusWriter:      statusWriter,
+		writer:            writer,
 		autoscaler:        autoscaler,
 		googleCloudClient: googleCloundClient,
 		clusterID:         clusterID,
@@ -73,7 +73,7 @@ func (s *Syncer) Start() {
 			s.autoscaler.Status.CurrentNodes = &currentNodes
 			s.log.Info("Metric read", "cpu utilization", currentCpu, "node count", currentNodes, "autoscaler", s.autoscaler.ObjectMeta.Name)
 
-			if err := s.statusWriter.Update(ctx, s.autoscaler); err != nil {
+			if err := s.writer.Update(ctx, s.autoscaler); err != nil {
 				if strings.Contains(err.Error(), inexistentResourceError) {
 					s.log.Info("Resource not found")
 					break

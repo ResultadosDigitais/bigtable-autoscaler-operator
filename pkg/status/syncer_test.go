@@ -35,7 +35,7 @@ func Test_statusSyncer_Start(t *testing.T) {
 
 	type fields struct {
 		ctx               context.Context
-		statusWriter      status.Writer
+		writer            status.Writer
 		autoscaler        *bigtablev1.BigtableAutoscaler
 		googleCloudClient googlecloud.GoogleCloudClient
 		clusterID         string
@@ -49,7 +49,7 @@ func Test_statusSyncer_Start(t *testing.T) {
 			name: "starts the syncer",
 			fields: fields{
 				ctx:               context.Background(),
-				statusWriter:      &mockStatusWriter,
+				writer:            &mockStatusWriter,
 				autoscaler:        &autoscaler,
 				googleCloudClient: &mockGoogleCloudClient,
 				clusterID:         "cluster-id",
@@ -61,7 +61,7 @@ func Test_statusSyncer_Start(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			s := status.NewSyncer(
 				tt.fields.ctx,
-				tt.fields.statusWriter,
+				tt.fields.writer,
 				tt.fields.autoscaler,
 				tt.fields.googleCloudClient,
 				tt.fields.clusterID,
