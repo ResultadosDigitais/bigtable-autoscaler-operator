@@ -191,7 +191,7 @@ func (r *BigtableAutoscalerReconciler) needUpdateNodes(status *bigtablev1.Bigtab
 		return false
 	}
 
-	if status.LastScaleTime != nil && now.Before(status.LastScaleTime.Time.Add(scaleDownInterval)) {
+	if desiredNodes < currentNodes && status.LastScaleTime != nil && now.Before(status.LastScaleTime.Time.Add(scaleDownInterval)) {
 		r.log.Info(
 			"Too soon to scale",
 			"time to wait", scaleDownInterval,
