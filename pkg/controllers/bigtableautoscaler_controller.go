@@ -19,7 +19,6 @@ package controllers
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -100,7 +99,7 @@ func (r *BigtableAutoscalerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 		return ctrl.Result{}, fmt.Errorf("failed to get autoscaler: %w", err)
 	}
 
-	r.log.Info("reconciling", "autoscaler", autoscaler.UID)
+	r.log.Info("Reconciling", "autoscaler", autoscaler.UID)
 	clusterRef := autoscaler.Spec.BigtableClusterRef
 
 	credentialsJSON, err := r.getCredentialsJSON(ctx, autoscaler.Spec.ServiceAccountSecretRef, autoscaler.Namespace)
@@ -148,10 +147,6 @@ func (r *BigtableAutoscalerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 	}
 
 	if err = r.Status().Update(ctx, autoscaler); err != nil {
-		if strings.Contains(err.Error(), optimisticLockErrorMsg) {
-			r.log.Info("opsi, temos um problema de concorrencia")
-			return ctrl.Result{RequeueAfter: time.Second * 1}, nil
-		}
 		return ctrl.Result{}, fmt.Errorf("failed to update autoscaler status: %w", err)
 	}
 

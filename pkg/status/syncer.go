@@ -68,7 +68,7 @@ func (s *Syncer) Register(
 
 				if err := s.writer.Update(ctx, autoscaler); err != nil {
 					if strings.Contains(err.Error(), inexistentResourceError) {
-						s.log.Info("Resource not found")
+						s.log.Info("Autoscaler was deleted, stopping syncing.")
 						return nil
 					}
 
