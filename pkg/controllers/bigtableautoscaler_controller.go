@@ -137,17 +137,7 @@ func (r *BigtableAutoscalerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 	autoscaler.Status.DesiredNodes = &desiredNodes
 
 	now := r.clock.Now()
-	if autoscaler.Status.LastScaleTime == nil {
-		autoscaler.Status.LastScaleTime = &metav1.Time{Time: now}
-	}
-
-	needUpdate := r.needUpdateNodes(
-		*autoscaler.Status.CurrentNodes,
-		*autoscaler.Status.DesiredNodes,
-		*autoscaler.Status.LastScaleTime,
-		now,
-	)
-
+	needUpdate := r.needUpdateNodes(&autoscaler.Status, now)
 	if needUpdate {
 		r.log.Info("Updating last scale time")
 		autoscaler.Status.LastScaleTime = &metav1.Time{Time: now}
@@ -220,9 +210,17 @@ func scaleNodes(ctx context.Context, credentialsJSON []byte, clusterRef *bigtabl
 	return client.UpdateCluster(ctx, clusterRef.InstanceID, clusterRef.ClusterID, desiredNodes)
 }
 
-func (r *BigtableAutoscalerReconciler) needUpdateNodes(currentNodes, desiredNodes int32, lastScaleTime metav1.Time, now time.Time) bool {
+func (r *BigtableAutoscalerReconciler) needUpdateNodes(status *bigtablev1.BigtableAutoscalerStatus, now time.Time) bool {
 	scaleDownInterval := 1 * time.Minute
 	scaleUpInterval := 1 * time.Minute
+
+	if status.CurrentNodes == nil || status.DesiredNodes == nil || status.LastScaleTime == nil {
+		return false
+	}
+
+	currentNodes := *status.CurrentNodes
+	desiredNodes := *status.DesiredNodes
+	lastScaleTime := *status.LastScaleTime
 
 	switch {
 	case desiredNodes == currentNodes:
