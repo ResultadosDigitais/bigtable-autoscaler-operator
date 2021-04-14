@@ -48,12 +48,11 @@ const optimisticLockErrorMsg = "the object has been modified; please apply your 
 type BigtableAutoscalerReconciler struct {
 	ctrlclient.Client
 
-	reader  ctrlclient.Reader
-	scheme  *runtime.Scheme
-	log     logr.Logger
-	syncer  *status.Syncer
-	syncers map[types.NamespacedName]bool
-	clock   clock.Clock
+	reader ctrlclient.Reader
+	scheme *runtime.Scheme
+	syncer *status.Syncer
+	clock  clock.Clock
+	log    logr.Logger
 }
 
 func NewBigtableReconciler(
@@ -66,12 +65,11 @@ func NewBigtableReconciler(
 	syncer := status.NewSyncer(client.Status(), log)
 
 	r := &BigtableAutoscalerReconciler{
-		Client:  client,
-		reader:  reader,
-		scheme:  scheme,
-		log:     log,
-		syncer:  syncer,
-		syncers: make(map[types.NamespacedName]bool),
+		Client: client,
+		reader: reader,
+		scheme: scheme,
+		syncer: syncer,
+		log:    log,
 	}
 
 	return r
@@ -94,7 +92,7 @@ func (r *BigtableAutoscalerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 
 	if err != nil {
 		if errors.IsNotFound(err) {
-			delete(r.syncers, req.NamespacedName)
+			// delete(r.syncers, req.NamespacedName)
 
 			// Object not found, return.  Created objects are automatically garbage collected.
 			// For additional cleanup logic use finalizers.
@@ -104,6 +102,7 @@ func (r *BigtableAutoscalerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 		return ctrl.Result{}, fmt.Errorf("failed to get autoscaler: %w", err)
 	}
 
+	r.log.Info("reconciling", "autoscaler", autoscaler.UID)
 	clusterRef := autoscaler.Spec.BigtableClusterRef
 
 	credentialsJSON, err := r.getCredentialsJSON(ctx, autoscaler.Spec.ServiceAccountSecretRef, autoscaler.Namespace)
@@ -111,16 +110,12 @@ func (r *BigtableAutoscalerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 		return ctrl.Result{}, fmt.Errorf("failed to get credentials: %w", err)
 	}
 
-	if _, ok := r.syncers[req.NamespacedName]; !ok {
-		googleCloudClient, err := googlecloud.NewClientFromCredentials(ctx, credentialsJSON, clusterRef.ProjectID, clusterRef.InstanceID)
-		if err != nil {
-			return ctrl.Result{}, fmt.Errorf("failed to initialize googlecloud client: %w", err)
-		}
-
-		r.syncer.Register(ctx, autoscaler, googleCloudClient)
-
-		r.syncers[req.NamespacedName] = true
+	googleCloudClient, err := googlecloud.NewClientFromCredentials(ctx, credentialsJSON, clusterRef.ProjectID, clusterRef.InstanceID)
+	if err != nil {
+		return ctrl.Result{}, fmt.Errorf("failed to initialize googlecloud client: %w", err)
 	}
+
+	r.syncer.Register(ctx, autoscaler, googleCloudClient)
 
 	var defaultMaxScaleDownNodes int32 = 2
 

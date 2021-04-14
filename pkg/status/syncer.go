@@ -10,6 +10,7 @@ import (
 	"bigtable-autoscaler.com/m/v2/pkg/googlecloud"
 	"github.com/go-logr/logr"
 	"golang.org/x/sync/errgroup"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 const optimisticLockError = "the object has been modified; please apply your changes to the latest version and try again"
@@ -17,22 +18,22 @@ const inexistentResourceError = "invalid object"
 const tickTime = 3 * time.Second
 
 type Syncer struct {
-	writer Writer
-	log    logr.Logger
+	writer  Writer
+	running map[types.UID]bool
+	log     logr.Logger
 }
 
 type syncerInstance struct {
 }
-
-// syncers: make(map[types.NamespacedName]*status.Syncer),
 
 // TODO: register new specs to sync
 // TODO: remove specs from sync list
 
 func NewSyncer(writer Writer, log logr.Logger) *Syncer {
 	return &Syncer{
-		writer: writer,
-		log:    log,
+		writer:  writer,
+		running: make(map[types.UID]bool),
+		log:     log,
 	}
 }
 
@@ -42,6 +43,12 @@ func (s *Syncer) Register(
 	googleCloudClient googlecloud.GoogleCloudClient,
 ) {
 	eg, ctx := errgroup.WithContext(ctx)
+
+	if _, ok := s.running[autoscaler.UID]; ok {
+		return
+	}
+
+	s.running[autoscaler.UID] = true
 
 	eg.Go(func() error {
 		ticker := time.NewTicker(tickTime)
