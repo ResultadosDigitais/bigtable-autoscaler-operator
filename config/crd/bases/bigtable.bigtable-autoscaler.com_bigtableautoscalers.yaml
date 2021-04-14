@@ -61,6 +61,7 @@ spec:
                 minimum: 1
                 type: integer
               maxScaleDownNodes:
+                default: 2
                 description: upper limit for the number of nodes when autoscaler scaledown.
                 format: int32
                 minimum: 1
@@ -100,12 +101,15 @@ spec:
             description: BigtableAutoscalerStatus defines the observed state of BigtableAutoscaler
             properties:
               CPUUtilization:
+                default: 0
                 format: int32
                 type: integer
               currentNodes:
+                default: 0
                 format: int32
                 type: integer
               desiredNodes:
+                default: 0
                 format: int32
                 type: integer
               lastFetchTime:

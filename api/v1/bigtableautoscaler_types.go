@@ -47,6 +47,7 @@ type BigtableAutoscalerSpec struct {
 	// It cannot be smaller than MinNodes.
 	MaxNodes *int32 `json:"maxNodes"`
 
+	// +kubebuilder:default:=2
 	// +kubebuilder:validation:Minimum=1
 	// +kubebuilder:validation:Optional
 	// upper limit for the number of nodes when autoscaler scaledown.
@@ -66,11 +67,17 @@ type BigtableAutoscalerSpec struct {
 type BigtableAutoscalerStatus struct {
 	// Important: Run "make" to regenerate code after modifying this file
 
-	LastScaleTime         *metav1.Time `json:"lastScaleTime,omitempty"`
-	LastFetchTime         *metav1.Time `json:"lastFetchTime,omitempty"`
-	CurrentNodes          *int32       `json:"currentNodes,omitempty"`
-	DesiredNodes          *int32       `json:"desiredNodes,omitempty"`
-	CurrentCPUUtilization *int32       `json:"CPUUtilization,omitempty"`
+	LastScaleTime *metav1.Time `json:"lastScaleTime,omitempty"`
+	LastFetchTime *metav1.Time `json:"lastFetchTime,omitempty"`
+
+	// +kubebuilder:default:=0
+	DesiredNodes *int32 `json:"desiredNodes,omitempty"`
+
+	// +kubebuilder:default:=0
+	CurrentNodes *int32 `json:"currentNodes,omitempty"`
+
+	// +kubebuilder:default:=0
+	CurrentCPUUtilization *int32 `json:"CPUUtilization,omitempty"`
 }
 
 type BigtableClusterRef struct {
