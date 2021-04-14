@@ -81,7 +81,6 @@ func (r *BigtableAutoscalerReconciler) SetupWithManager(mgr ctrl.Manager) error 
 
 // +kubebuilder:rbac:groups=bigtable.bigtable-autoscaler.com,resources=bigtableautoscalers,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=bigtable.bigtable-autoscaler.com,resources=bigtableautoscalers/status,verbs=get;update;patch
-
 func (r *BigtableAutoscalerReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	ctx := context.Background()
 	r.clock = clock.RealClock{}
@@ -98,23 +97,9 @@ func (r *BigtableAutoscalerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 	}
 
 	r.log.Info("Reconciling", "autoscaler", autoscaler.UID)
-	clusterRef := autoscaler.Spec.BigtableClusterRef
-
-	credentialsJSON, err := r.getCredentialsJSON(ctx, autoscaler.Spec.ServiceAccountSecretRef, autoscaler.Namespace)
-	if err != nil {
-		return ctrl.Result{}, fmt.Errorf("failed to get credentials: %w", err)
-	}
-
-	googleCloudClient, err := googlecloud.NewClientFromCredentials(ctx, credentialsJSON, clusterRef.ProjectID, clusterRef.InstanceID)
-	if err != nil {
-		return ctrl.Result{}, fmt.Errorf("failed to initialize googlecloud client: %w", err)
-	}
-
-	r.syncer.Register(ctx, &autoscaler, googleCloudClient)
-
-	var defaultMaxScaleDownNodes int32 = 2
 
 	if autoscaler.Spec.MaxScaleDownNodes == nil || *autoscaler.Spec.MaxScaleDownNodes == 0 {
+		var defaultMaxScaleDownNodes int32 = 2
 		autoscaler.Spec.MaxScaleDownNodes = &defaultMaxScaleDownNodes
 	}
 
@@ -127,6 +112,19 @@ func (r *BigtableAutoscalerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 		var nodes int32 = 0
 		autoscaler.Status.CurrentNodes = &nodes
 	}
+
+	credentialsJSON, err := r.getCredentialsJSON(ctx, autoscaler.Spec.ServiceAccountSecretRef, autoscaler.Namespace)
+	if err != nil {
+		return ctrl.Result{}, fmt.Errorf("failed to get credentials: %w", err)
+	}
+
+	clusterRef := autoscaler.Spec.BigtableClusterRef
+	googleCloudClient, err := googlecloud.NewClientFromCredentials(ctx, credentialsJSON, clusterRef.ProjectID, clusterRef.InstanceID)
+	if err != nil {
+		return ctrl.Result{}, fmt.Errorf("failed to initialize googlecloud client: %w", err)
+	}
+
+	r.syncer.Register(ctx, &autoscaler, googleCloudClient)
 
 	desiredNodes := nodes_calculator.CalcDesiredNodes(&autoscaler.Status, &autoscaler.Spec)
 	autoscaler.Status.DesiredNodes = &desiredNodes
