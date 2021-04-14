@@ -80,6 +80,8 @@ func (r *BigtableAutoscalerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 	r.clock = clock.RealClock{}
 
 	autoscaler, err := r.getAutoscaler(ctx, req.NamespacedName)
+	clusterRef := autoscaler.Spec.BigtableClusterRef
+
 	if err != nil {
 		if errors.IsNotFound(err) {
 			delete(r.syncers, req.NamespacedName)
@@ -98,12 +100,12 @@ func (r *BigtableAutoscalerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 	}
 
 	if _, ok := r.syncers[req.NamespacedName]; !ok {
-		googleCloudClient, err := googlecloud.NewClientFromCredentials(ctx, credentialsJSON, "cdp-development", "clustering-engine")
+		googleCloudClient, err := googlecloud.NewClientFromCredentials(ctx, credentialsJSON, clusterRef.ProjectID, clusterRef.InstanceID)
 		if err != nil {
 			return ctrl.Result{}, fmt.Errorf("failed to initialize googlecloud client: %w", err)
 		}
 
-		statusSyncer := status.NewSyncer(ctx, r.Status(), autoscaler, googleCloudClient, "clustering-engine-c1", r.log)
+		statusSyncer := status.NewSyncer(ctx, r.Status(), autoscaler, googleCloudClient, clusterRef.ClusterID, r.log)
 		statusSyncer.Start()
 
 		r.syncers[req.NamespacedName] = statusSyncer
@@ -143,8 +145,9 @@ func (r *BigtableAutoscalerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 	if needUpdate {
 		r.log.Info("Updating last scale time")
 		autoscaler.Status.LastScaleTime = &metav1.Time{Time: now}
+
 		r.log.Info("Metric read", "Increasing node count to", desiredNodes)
-		err := scaleNodes(ctx, credentialsJSON, "cdp-development", "clustering-engine", "clustering-engine-c1", desiredNodes)
+		err := scaleNodes(ctx, credentialsJSON, &clusterRef, desiredNodes)
 		if err != nil {
 			r.log.Error(err, "failed to update nodes")
 		}
@@ -201,14 +204,14 @@ func (r *BigtableAutoscalerReconciler) getAutoscaler(ctx context.Context, namesp
 	return &autoscaler, nil
 }
 
-func scaleNodes(ctx context.Context, credentialsJSON []byte, projectID, instanceID, clusterID string, desiredNodes int32) error {
-	client, err := bigtable.NewInstanceAdminClient(ctx, projectID, option.WithCredentialsJSON(credentialsJSON))
+func scaleNodes(ctx context.Context, credentialsJSON []byte, clusterRef *bigtablev1.BigtableClusterRef, desiredNodes int32) error {
+	client, err := bigtable.NewInstanceAdminClient(ctx, clusterRef.ProjectID, option.WithCredentialsJSON(credentialsJSON))
 
 	if err != nil {
 		return err
 	}
 
-	return client.UpdateCluster(ctx, instanceID, clusterID, desiredNodes)
+	return client.UpdateCluster(ctx, clusterRef.InstanceID, clusterRef.ClusterID, desiredNodes)
 }
 
 func (r *BigtableAutoscalerReconciler) needUpdateNodes(currentNodes, desiredNodes int32, lastScaleTime metav1.Time, now time.Time) bool {
