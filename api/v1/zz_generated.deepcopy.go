@@ -131,13 +131,13 @@ func (in *BigtableAutoscalerStatus) DeepCopyInto(out *BigtableAutoscalerStatus) 
 		in, out := &in.LastFetchTime, &out.LastFetchTime
 		*out = (*in).DeepCopy()
 	}
-	if in.CurrentNodes != nil {
-		in, out := &in.CurrentNodes, &out.CurrentNodes
+	if in.DesiredNodes != nil {
+		in, out := &in.DesiredNodes, &out.DesiredNodes
 		*out = new(int32)
 		**out = **in
 	}
-	if in.DesiredNodes != nil {
-		in, out := &in.DesiredNodes, &out.DesiredNodes
+	if in.CurrentNodes != nil {
+		in, out := &in.CurrentNodes, &out.CurrentNodes
 		*out = new(int32)
 		**out = **in
 	}
