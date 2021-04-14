@@ -117,7 +117,7 @@ func (r *BigtableAutoscalerReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 			return ctrl.Result{}, fmt.Errorf("failed to initialize googlecloud client: %w", err)
 		}
 
-		r.syncer.Start(ctx, autoscaler, googleCloudClient)
+		r.syncer.Register(ctx, autoscaler, googleCloudClient)
 
 		r.syncers[req.NamespacedName] = true
 	}

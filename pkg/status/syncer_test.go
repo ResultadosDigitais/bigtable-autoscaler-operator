@@ -16,7 +16,7 @@ import (
 	"bigtable-autoscaler.com/m/v2/pkg/status"
 )
 
-func TestStart(t *testing.T) {
+func TestRegister(t *testing.T) {
 	autoscaler := bigtablev1.BigtableAutoscaler{
 		Spec: bigtablev1.BigtableAutoscalerSpec{
 			BigtableClusterRef: bigtablev1.BigtableClusterRef{
@@ -67,7 +67,7 @@ func TestStart(t *testing.T) {
 				tt.fields.writer,
 				tt.fields.log,
 			)
-			s.Start(
+			s.Register(
 				tt.fields.ctx,
 				tt.fields.autoscaler,
 				tt.fields.googleCloudClient,

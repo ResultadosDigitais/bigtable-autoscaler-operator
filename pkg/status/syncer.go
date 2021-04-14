@@ -36,7 +36,7 @@ func NewSyncer(writer Writer, log logr.Logger) *Syncer {
 	}
 }
 
-func (s *Syncer) Start(
+func (s *Syncer) Register(
 	ctx context.Context,
 	autoscaler *bigtablev1.BigtableAutoscaler,
 	googleCloudClient googlecloud.GoogleCloudClient,
