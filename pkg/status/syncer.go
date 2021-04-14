@@ -57,11 +57,11 @@ func (s *Syncer) Start() {
 	eg.Go(func() error {
 		ticker := time.NewTicker(tickTime)
 		for ; true; <-ticker.C {
-			metric, err := s.googleCloudClient.GetCurrentCPULoad()
+			currentCpu, err := s.googleCloudClient.GetCurrentCPULoad()
 			if err != nil {
 				return fmt.Errorf("failed to get metrics: %w", err)
 			}
-			s.autoscaler.Status.CurrentCPUUtilization = &metric
+			s.autoscaler.Status.CurrentCPUUtilization = &currentCpu
 
 			currentNodes, err := s.googleCloudClient.GetCurrentNodeCount(s.clusterID)
 			if err != nil {
@@ -71,7 +71,7 @@ func (s *Syncer) Start() {
 			}
 
 			s.autoscaler.Status.CurrentNodes = &currentNodes
-			s.log.Info("Metric read", "cpu utilization", metric, "node count", currentNodes, "autoscaler", s.autoscaler.ObjectMeta.Name)
+			s.log.Info("Metric read", "cpu utilization", currentCpu, "node count", currentNodes, "autoscaler", s.autoscaler.ObjectMeta.Name)
 
 			if err := s.statusWriter.Update(ctx, s.autoscaler); err != nil {
 				if strings.Contains(err.Error(), inexistentResourceError) {
