@@ -47,9 +47,9 @@ Tilt is tool to automate development cycle and has features like hot deploy.
    1. Install its dependencies: ctlptl and kind (or other tool to create local k8s clusters) as instructed.
 1. If it doesn't exist, create your k8s cluster using ctlptl
 
-``` sh
-ctlptl create cluster kind --registry=ctlptl-registry
-```
+    ``` sh
+    ctlptl create cluster kind --registry=ctlptl-registry
+    ```
 1. Provide the secret with the service account credentials and role as described in section [Secret setup](#secret-setup).
 1. Run `tilt up`
 
@@ -57,67 +57,65 @@ ctlptl create cluster kind --registry=ctlptl-registry
 Running manually requires some extra steps!
 
 1. If it doesn't exist, create your local k8s cluster. Here we will use kind to create it:
-
-```sh
-kind create cluster
-```
+    ```sh
+    kind create cluster
+    ```
 
 1. Provide the secret with the service account credentials and role before as described in section [Secret setup](#secret-setup).
 
 1. check that your cluster is correctly running
-
-```sh
-kubectl cluster-info
-```
+    ```sh
+    kubectl cluster-info
+    ```
 
 1. Apply Custom Resource Definition
-```sh
-make install
-```
+    ```sh
+    make install
+    ```
 
 1. Build docker image with manger binary
-``` sh
-make docker-build
-```
+    ``` sh
+    make docker-build
+    ```
 
 1. Load this image to the cluster
-```sh
-kind load docker-image controller:latest
-```
+    ```sh
+    kind load docker-image controller:latest
+    ```
 
 1. Deploy the operator to the local cluster
-```sh
-make deploy
-```
+    ```sh
+    make deploy
+    ```
 
-1. Apply autoscaler sample
-```sh
-kubectl apply -f config/samples/bigtable_v1_bigtableautoscaler.yaml
-```
+1. Apply the autoscaler sample
+    ```sh
+    kubectl apply -f config/samples/bigtable_v1_bigtableautoscaler.yaml
+    ```
 
 1. Check pods and logs
-```sh
-kubectl -n bigtable-autoscaler-system logs $(kubectl -n bigtable-autoscaler-system get pods | tail -n1 | cut -d ' ' -f1) --all-containers
-```
+    ```sh
+    kubectl -n bigtable-autoscaler-system logs $(kubectl -n bigtable-autoscaler-system get pods | tail -n1 | cut -d ' ' -f1) --all-containers
+    ```
 
 
 #### Secret setup
 1. Use the service account from the [Prerequisites](#prerequisites) section to create the k8s secret
-```sh
-kubectl create secret generic bigtable-autoscaler-service-account --from-file=service-account=./your_service_account.json
-```
+    ```sh
+    kubectl create secret generic bigtable-autoscaler-service-account --from-file=service-account=./your_service_account.json
+    ```
 
 1. Create role and rolebinding to read secret
-```sh
-kubectl apply -f config/rbac/secret-role.yml
-```
+    ```sh
+    kubectl apply -f config/rbac/secret-role.yml
+    ```
 
 ## Running tests
-```sh
-go test ./... -v
-```
+    ```sh
+    go test ./... -v
+    ```
  or
  
- ```sh
-gotestsum
- ```
+    ```sh
+    gotestsum
+    ```
