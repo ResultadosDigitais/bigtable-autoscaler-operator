@@ -100,7 +100,7 @@ Running manually requires some extra steps!
     ```
 
 
-#### Secret setup
+## Secret setup
 1. Use the service account from the [Prerequisites](#prerequisites) section to create the k8s secret
     ```sh
     kubectl create secret generic bigtable-autoscaler-service-account --from-file=service-account=./your_service_account.json
