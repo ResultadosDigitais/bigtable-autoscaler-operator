@@ -1,4 +1,5 @@
 [![CircleCI](https://circleci.com/gh/ResultadosDigitais/bigtable-autoscaler-operator.svg?style=svg)](https://circleci.com/gh/ResultadosDigitais/bigtable-autoscaler-operator)
+[![GitHub release](https://img.shields.io/github/v/release/ResultadosDigitais/bigtable-autoscaler-operator.svg)](https://github.com/ResultadosDigitais/bigtable-autoscaler-operator/releases/latest)
 
 # Bigtable Autoscaler Operator 
 **Bigtable Autoscaler Operator** is a [Kubernetes Operator](https://coreos.com/operators/) to autoscale the number of nodes of a [Google Cloud Bigtable](https://cloud.google.com/bigtable) instance based on the CPU utilization.
