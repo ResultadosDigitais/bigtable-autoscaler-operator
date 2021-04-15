@@ -26,10 +26,22 @@ The image bellow shows how peaks above the CPU target of 50% are shortened by th
 1. Enable APIs [Bigtable](https://cloud.google.com/bigtable/docs/access-control) and [Monitoring](https://cloud.google.com/monitoring/api/enable-api) on your GCP project.
 1. Generate a service account secret with the role for Bigtable administrator.
 
-## How to install in a Kubernetes cluster
-These are the steps for applying the released builds into a Kubernetes cluster.
+## How to install this operator in a Kubernetes cluster
+1. Visit the [releases page](https://github.com/ResultadosDigitais/bigtable-autoscaler-operator/releases/), download the `all-in-one.yml` of the version of your choice and apply it
+    ``` sh
+    kubectl apply -f all-in-one.yml
+    ```
 
-TODO
+## How to use this operator in a Kubernetes cluster
+1. Use the service account from the [Prerequisites](#prerequisites) section to create the k8s secret
+    ```sh
+    kubectl create secret generic bigtable-autoscaler-service-account --from-file=service-account=./your_service_account.json
+    ```
+
+1. Apply a manifest based of the [sample file](./config/samples/bigtable_v1_bigtableautoscaler.yaml)
+    ``` sh
+    kubectl apply -f my_bigtableautoscaler.yaml
+    ```
 
 ## Development environment
 These are the steps for setting up the development environment. 
@@ -62,7 +74,7 @@ Running manually requires some extra steps!
     kind create cluster
     ```
 
-1. Provide the secret with the service account credentials and role before as described in section [Secret setup](#secret-setup).
+1. Provide the secret with the service account credentials and role as described in section [Secret setup](#secret-setup).
 
 1. check that your cluster is correctly running
     ```sh
@@ -98,7 +110,6 @@ Running manually requires some extra steps!
     ```sh
     kubectl -n bigtable-autoscaler-system logs $(kubectl -n bigtable-autoscaler-system get pods | tail -n1 | cut -d ' ' -f1) --all-containers
     ```
-
 
 ## Secret setup
 1. Use the service account from the [Prerequisites](#prerequisites) section to create the k8s secret
