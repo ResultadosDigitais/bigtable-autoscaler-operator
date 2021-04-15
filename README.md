@@ -4,6 +4,17 @@
 # Bigtable Autoscaler Operator 
 **Bigtable Autoscaler Operator** is a [Kubernetes Operator](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/) to autoscale the number of nodes of a [Google Cloud Bigtable](https://cloud.google.com/bigtable) instance based on the CPU utilization.
 
+- [Bigtable Autoscaler Operator](#bigtable-autoscaler-operator)
+  * [Overview](#overview)
+  * [Prerequisites](#prerequisites)
+  * [How to install this operator in a Kubernetes cluster](#how-to-install-this-operator-in-a-kubernetes-cluster)
+  * [How to use this operator in a Kubernetes cluster](#how-to-use-this-operator-in-a-kubernetes-cluster)
+  * [Development environment](#development-environment)
+    + [Option 1: Run with Tilt (recomended)](#option-1--run-with-tilt--recomended-)
+    + [Option 2: Manual run](#option-2--manual-run)
+  * [Secret setup](#secret-setup)
+  * [Running tests](#running-tests)
+
 ## Overview
 [Google Cloud Bigtable](https://cloud.google.com/bigtable) is designed to scale horizontally, meaning that the number of nodes of an instance can be increased to balance and reduce the average CPU utilization.
 For Bigtable applications dealing with high variances of workload, the procedure of managing the amount of nodes must be fully automated for a better resource cost.
