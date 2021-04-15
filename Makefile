@@ -1,6 +1,10 @@
 
 # Image URL to use all building/pushing image targets
+ifeq (,$(VERSION))
 IMG ?= controller:latest
+else
+IMG = resultadosdigitais/bigtable-autoscaler-operator:${VERSION}
+endif
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
 CRD_OPTIONS ?= "crd:trivialVersions=true"
 
@@ -72,10 +76,18 @@ ifeq (, $(shell which controller-gen))
 	CONTROLLER_GEN_TMP_DIR=$$(mktemp -d) ;\
 	cd $$CONTROLLER_GEN_TMP_DIR ;\
 	go mod init tmp ;\
-	go get sigs.k8s.io/controller-tools/cmd/controller-gen@v0.2.5 ;\
+	go get sigs.k8s.io/controller-tools/cmd/controller-gen@v0.5.0 ;\
 	rm -rf $$CONTROLLER_GEN_TMP_DIR ;\
 	}
 CONTROLLER_GEN=$(GOBIN)/controller-gen
 else
 CONTROLLER_GEN=$(shell which controller-gen)
 endif
+
+generate-all-in-one:
+	cd config/manager && kustomize edit set image controller=${IMG}
+	{ kustomize build config/default & kustomize build config/crd; } > all-in-one.yml
+
+release: generate-all-in-one docker-build docker-push
+	git tag -a ${VERSION} -m "Release";
+    git push origin ${VERSION};
