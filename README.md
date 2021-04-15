@@ -128,11 +128,11 @@ Running manually requires some extra steps!
     ```
 
 ## Running tests
-    ```sh
-    go test ./... -v
-    ```
+```sh
+go test ./... -v
+```
  or
  
-    ```sh
-    gotestsum
-    ```
+```sh
+gotestsum
+```
