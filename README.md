@@ -18,7 +18,8 @@ occur the CPU utilization must go bellow 25%. This is important to avoid downsca
 
 All scale operations are made respecting a reaction time window, which at time is not part of the manifest specification.
 
-![Bigtable CPU autoscaling](cpu_scaling.png)
+The image bellow shows how peaks above the CPU target of 50% are shortened by the automatic increase of nodes.
+![Bigtable CPU utilization and nodes count](cpu_scaling.png "Autoscaling on CPU utilization.")
 
 ## Prerequisites
 1. Enable APIs [Bigtable](https://cloud.google.com/bigtable/docs/access-control) and [Monitoring](https://cloud.google.com/monitoring/api/enable-api) on your GCP project.
