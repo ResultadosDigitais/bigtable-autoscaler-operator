@@ -23,7 +23,7 @@ The image bellow shows how peaks above the CPU target of 50% are shortened by th
 ![Bigtable CPU utilization and nodes count](cpu_scaling.png "Autoscaling on CPU utilization.")
 
 ## Prerequisites
-1. Enable APIs [Bigtable](https://cloud.google.com/bigtable/docs/access-control) and [Monitoring](https://cloud.google.com/monitoring/api/enable-api) on your GCP project.
+1. Enable [Bigtable](https://cloud.google.com/bigtable/docs/access-control) and [Monitoring](https://cloud.google.com/monitoring/api/enable-api) APIs on your GCP project.
 1. Generate a service account secret with the role for Bigtable administrator.
 
 ## How to install this operator in a Kubernetes cluster
