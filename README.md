@@ -1,7 +1,7 @@
 # Bigtable Autoscaler Operator
 This is a Kubernetes operator to autoscale Bigtable
 
-## Develompent cycle
+## Development cycle
 
 ### Option 1: Run with Tilt
 
