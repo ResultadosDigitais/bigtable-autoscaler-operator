@@ -86,8 +86,8 @@ endif
 
 generate-all-in-one:
 	cd config/manager && kustomize edit set image controller=${IMG}
-	{ kustomize build config/default & kustomize build config/crd; } > all-in-one.yml
+	{ kustomize build config/default & kustomize build config/crd & kustomize build config/rbac; } > all-in-one.yml
 
 release: generate-all-in-one docker-build docker-push
-	git tag -a ${VERSION} -m "Release";
+	git tag -a ${VERSION} -m "Release"; \
     git push origin ${VERSION};
