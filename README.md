@@ -28,14 +28,10 @@ The image bellow shows how peaks above the CPU target of 50% are shortened by th
 ## How to install in a Kubernetes cluster
 These are the steps for applying the released builds into a Kubernetes cluster.
 
-It requires the [prerequisites](#prerequisites).
-
 TODO
 
 ## Development environment
 These are the steps for setting up the development environment. 
-
-It requires the [prerequisites](#prerequisites).
 
 This project is using go version 1.13 and other tools with its respective version, we don't guarantee that using other versions can perform successful builds.
 
