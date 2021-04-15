@@ -38,9 +38,14 @@ The image bellow shows how peaks above the CPU target of 50% are shortened by th
     kubectl create secret generic bigtable-autoscaler-service-account --from-file=service-account=./your_service_account.json
     ```
 
-1. Apply a manifest based of the [sample file](./config/samples/bigtable_v1_bigtableautoscaler.yaml)
+1. Apply a manifest based on the [sample file](./config/samples/bigtable_v1_bigtableautoscaler.yaml)
     ``` sh
     kubectl apply -f my_bigtableautoscaler.yaml
+    ```
+    
+1. Check the autoscaler status
+    ``` sh
+    kubectl get bigtableautoscaler
     ```
 
 ## Development environment
