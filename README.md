@@ -8,7 +8,7 @@
 For Bigtable applications dealing with high variances of workload, the procedure of managing the amount of nodes must be fully automated for a better resource cost.
 This operator automates Bigtable scaling by reconciling the number of nodes and the CPU utilization with the `minNodes`, `maxNodes`, and `targetCPUUtilization` manifest specifications.
 
-The reconcile behavior is to keep the CPU utilization of the instance bellow the target specification, it does that while respecting the minimum and maximum amount of nodes.
+The reconciler behavior is to keep the CPU utilization of the instance bellow the target specification, it does that while respecting the minimum and maximum amount of nodes.
 When the CPU utilization is above the target, the reconciler will increase the amount of nodes in steps linearly proportional to how above it is from the target.
 For example, considering 100% of CPU utilization and only one node running, if the CPU target is 50%, it increases to 2 nodes, but if the CPU target is 25% it increases to 4 nodes.
 
@@ -47,20 +47,20 @@ This project is using go version 1.13 and other tools with its respective versio
 ### Option 1: Run with Tilt (recomended)
 Tilt is tool to automate development cycle and has features like hot deploy.
 
-1. Install tilt (follow the [official instructions](https://docs.tilt.dev/install.html)) version 0.19.0. 
+1. Install tilt version 0.19.0 (follow the [official instructions](https://docs.tilt.dev/install.html)). 
    1. Install its dependencies: ctlptl and kind (or other tool to create local k8s clusters) as instructed.
-1. If it doesn't exists, create your k8s cluster using ctlptl
+1. If it doesn't exist, create your k8s cluster using ctlptl
 
 ``` sh
 ctlptl create cluster kind --registry=ctlptl-registry
 ```
-1. Provide the secret with the service account credentials and role before as described in section [Secret setup](#secret-setup).
+1. Provide the secret with the service account credentials and role as described in section [Secret setup](#secret-setup).
 1. Run `tilt up`
 
-### Option 2: Run manually
+### Option 2: Manual run
 Running manually requires some extra steps!
 
-1. If it doesn't exists, create your local k8s cluster. Here we will use kind to create it:
+1. If it doesn't exist, create your local k8s cluster. Here we will use kind to create it:
 
 ```sh
 kind create cluster
