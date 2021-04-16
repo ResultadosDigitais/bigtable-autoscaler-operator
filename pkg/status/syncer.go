@@ -37,6 +37,7 @@ func (s *Syncer) Register(
 	googleCloudClient googlecloud.GoogleCloudClient,
 ) {
 	if previous_ch, ok := s.running[autoscaler.UID]; ok {
+		s.log.Info("Stopping previous routine")
 		previous_ch <- true
 	}
 
@@ -46,6 +47,7 @@ func (s *Syncer) Register(
 	eg, ctx := errgroup.WithContext(ctx)
 	eg.Go(func() error {
 		ticker := time.NewTicker(tickTime)
+		s.log.Info("Starting new metrics sync routine")
 
 		for {
 			select {
