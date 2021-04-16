@@ -57,7 +57,9 @@ jobs:
       - run:
           name: Releases a new version
           command: |
-            echo $CIRCLE_BRANCH
+            echo $CIRCLE_TAG
+            echo pipeline.git.tag
+            echo "<< pipeline.git.tag >>"
       - store_artifacts:
           path: /tmp/artifacts
           destination: artifacts
