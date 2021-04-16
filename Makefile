@@ -71,10 +71,26 @@ docker-push:
 release-image: docker-build docker-push
 
 # Generates all manifests required to an installation
-release-manifests:
-	cd config/manager && kustomize edit set image controller=${IMG}
-	{ kustomize build config/default & kustomize build config/crd & kustomize build config/rbac; }
+release-manifests: kustomize
+	@cd config/manager && kustomize edit set image controller=${IMG}
+	@{ $(KUSTOMIZE) build config/default & $(KUSTOMIZE) build config/crd & $(KUSTOMIZE) build config/rbac; }
 
+# Find or download kustomize
+# download kustomize if necessary
+kustomize:
+ifeq (, $(shell which kustomize))
+	@{ \
+	set -e ;\
+	KUSTOMIZE_TMP_DIR=$$(mktemp -d) ;\
+	cd $$KUSTOMIZE_TMP_DIR ;\
+	go mod init tmp ;\
+	go get sigs.k8s.io/kustomize/kustomize/v3 ;\
+	rm -rf $$KUSTOMIZE_TMP_DIR ;\
+	}
+KUSTOMIZE=$(GOBIN)/kustomize
+else
+KUSTOMIZE=$(shell which kustomize)
+endif
 
 # Find or download controller-gen
 # download controller-gen if necessary

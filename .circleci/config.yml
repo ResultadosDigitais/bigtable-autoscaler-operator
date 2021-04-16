@@ -26,16 +26,12 @@ jobs:
           path: /tmp/test-reports
 
   build:
-    working_directory: ~/repo
-    docker:
-      - image: circleci/golang:1.13.15
+    machine:
+      docker_layer_caching: true
     steps:
       - checkout
       - run: docker login -u $DOCKERHUB_USER -p $DOCKERHUB_PASSWORD
       - run: mkdir -p /tmp/artifacts
-      - run:
-          name: Install Kustomize
-          command: go get sigs.k8s.io/kustomize/kustomize/v3
       - run:
           name: Build and push docker image
           command: |
@@ -52,19 +48,29 @@ jobs:
           path: /tmp/artifacts
           destination: artifacts
 
-  release:
+  release-image:
     machine:
       docker_layer_caching: true
     steps:
       - checkout
       - run: docker login -u $DOCKERHUB_USER -p $DOCKERHUB_PASSWORD
+      - run:
+          name: Releases a new version
+          command: |
+            VERSION=$(echo $CIRCLE_TAG | cut -c 2-)
+            VERSION=$VERSION make release-image
+
+  release-manifests:
+    docker:
+      - image: circleci/golang:1.13.15
+    steps:
+      - checkout
       - run: mkdir -p /tmp/artifacts
       - run:
           name: Releases a new version
           command: |
             VERSION=$(echo $CIRCLE_TAG | cut -c 2-)
-            make release-manifests > /tmp/artifacts/all-in-one.yml
-            make release-image
+            VERSION=$VERSION make release-manifests > /tmp/artifacts/all-in-one.yml
       - store_artifacts:
           path: /tmp/artifacts
           destination: artifacts
@@ -78,9 +84,15 @@ workflows:
             - dockerhub-credentials
   release:
     jobs:
-      - release:
+      - release-image:
           context:
             - dockerhub-credentials
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v([0-9]+\.?)+$/
+      - release-manifests:
           filters:
             branches:
               ignore: /.*/
