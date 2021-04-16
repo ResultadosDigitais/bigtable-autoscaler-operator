@@ -35,14 +35,16 @@ jobs:
       - run:
           name: Build and push docker image
           command: |
-            SHORT_GIT_HASH=$(echo $CIRCLE_SHA1 | cut -c -7)
-            docker build -t resultadosdigitais/bigtable-autoscaler-operator:$SHORT_GIT_HASH .
-            docker push resultadosdigitais/bigtable-autoscaler-operator:$SHORT_GIT_HASH
-            docker inspect --format='{{index .RepoDigests 0}}' resultadosdigitais/bigtable-autoscaler-operator:$SHORT_GIT_HASH > /tmp/artifacts/bigtable-autoscaler-operator-docker-image-digest.txt
+            IMAGE=resultadosdigitais/bigtable-autoscaler-operator:$(echo $CIRCLE_SHA1 | cut -c -7)
+            docker build -t $IMAGE .
+            docker push $IMAGE
+            docker inspect --format='{{index .RepoDigests 0}}' $IMAGE > /tmp/artifacts/bigtable-autoscaler-operator-docker-image-digest.txt
 
             if [ "$CIRCLE_BRANCH" == "master" ]; then
-              docker tag resultadosdigitais/bigtable-autoscaler-operator:$SHORT_GIT_HASH resultadosdigitais/bigtable-autoscaler-operator:stable
-              docker push resultadosdigitais/bigtable-autoscaler-operator:stable
+              STABLE_IMAGE=resultadosdigitais/bigtable-autoscaler-operator:stable
+
+              docker tag $IMAGE $STABLE_IMAGE
+              docker push $STABLE_IMAGE
             fi
       - store_artifacts:
           path: /tmp/artifacts
