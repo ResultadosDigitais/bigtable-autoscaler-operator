@@ -63,6 +63,13 @@ Then you can install it on your k8s cluster:
 kubectl apply -f my-autoscaler.yml
 ```
 
+You can check your autoscaler running:
+```sh
+kubectl get bigtableautoscalers
+```
+![image](https://user-images.githubusercontent.com/2609743/115090039-2a0d9080-9eea-11eb-9511-13715f42cbc4.png)
+
+
 ## Prerequisites
 1. Enable [Bigtable](https://cloud.google.com/bigtable/docs/access-control) and [Monitoring](https://cloud.google.com/monitoring/api/enable-api) APIs on your GCP project.
 1. Generate a service account secret with the role for Bigtable administrator.
