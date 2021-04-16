@@ -47,6 +47,21 @@ jobs:
           path: /tmp/artifacts
           destination: artifacts
 
+  release:
+    machine:
+      docker_layer_caching: true
+    steps:
+      - checkout
+      - run: docker login -u $DOCKERHUB_USER -p $DOCKERHUB_PASSWORD
+      - run: mkdir -p /tmp/artifacts
+      - run:
+          name: Releases a new version
+          command: |
+            echo "OLÁ"
+      - store_artifacts:
+          path: /tmp/artifacts
+          destination: artifacts
+
 workflows:
   test-and-build:
     jobs:
@@ -54,3 +69,11 @@ workflows:
       - build:
           context:
             - dockerhub-credentials
+  release:
+    jobs:
+      - release:
+          context:
+            - dockerhub-credentials
+          filters:
+            tags:
+              only: /^v([0-9]+\.?)+$/
