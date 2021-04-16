@@ -57,7 +57,7 @@ jobs:
       - run:
           name: Releases a new version
           command: |
-            echo "OLÁ"
+            echo $CIRCLE_BRANCH
       - store_artifacts:
           path: /tmp/artifacts
           destination: artifacts
