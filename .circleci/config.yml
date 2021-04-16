@@ -75,5 +75,7 @@ workflows:
           context:
             - dockerhub-credentials
           filters:
+            branches:
+              ignore: /.*/
             tags:
               only: /^v([0-9]+\.?)+$/
