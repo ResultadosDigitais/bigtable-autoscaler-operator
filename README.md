@@ -33,6 +33,36 @@ All scale operations are made respecting a reaction time window, which at time i
 The image bellow shows how peaks above the CPU target of 50% are shortened by the automatic increase of nodes.
 ![Bigtable CPU utilization and nodes count](cpu_scaling.png "Autoscaling on CPU utilization.")
 
+## Usage
+
+
+First of all, you need to create an autoscaling manifest:
+
+```yml
+# my-autoscaler.yml
+apiVersion: bigtable.bigtable-autoscaler.com/v1
+kind: BigtableAutoscaler
+metadata:
+  name: my-autoscaler
+spec:
+  bigtableClusterRef:
+    projectId: cool-project
+    instanceId: my-instance-id
+    clusterId: my-cluster-id
+  serviceAccountSecretRef:
+    name: example-service-account
+    key: service-account
+  minNodes: 1
+  maxNodes: 10
+  targetCPUUtilization: 50
+```
+
+Then you can install it on your k8s cluster:
+
+```sh
+kubectl apply -f my-autoscaler.yml
+```
+
 ## Prerequisites
 1. Enable [Bigtable](https://cloud.google.com/bigtable/docs/access-control) and [Monitoring](https://cloud.google.com/monitoring/api/enable-api) APIs on your GCP project.
 1. Generate a service account secret with the role for Bigtable administrator.
