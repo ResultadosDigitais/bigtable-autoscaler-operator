@@ -17,10 +17,10 @@
 
 ## Overview
 [Google Cloud Bigtable](https://cloud.google.com/bigtable) is designed to scale horizontally, meaning that the number of nodes of an instance can be increased to balance and reduce the average CPU utilization.
-For Bigtable applications dealing with high variances of workload, the procedure of managing the amount of nodes must be fully automated for a better resource cost.
-This operator automates Bigtable scaling by reconciling the number of nodes and the CPU utilization with the `minNodes`, `maxNodes`, and `targetCPUUtilization` manifest specifications.
+For Bigtable applications dealing with high variances of workload, automating the cluster scaling allow handling short load bursts while keeping costs as low as possible.
+This operator automates the scaling by balancing the number of nodes to keep the CPU utilization under the manifest specifications.
 
-The reconciler behavior is to keep the CPU utilization of the instance bellow the target specification, it does that while respecting the minimum and maximum amount of nodes.
+The reconciler's responsibility is to keep the CPU utilization of the instance below the target specification respecting the minimum and maximum amount of nodes.
 When the CPU utilization is above the target, the reconciler will increase the amount of nodes in steps linearly proportional to how above it is from the target.
 For example, considering 100% of CPU utilization and only one node running, if the CPU target is 50%, it increases to 2 nodes, but if the CPU target is 25% it increases to 4 nodes.
 
