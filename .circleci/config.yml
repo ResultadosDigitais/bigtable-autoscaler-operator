@@ -26,12 +26,16 @@ jobs:
           path: /tmp/test-reports
 
   build:
-    machine:
-      docker_layer_caching: true
+    working_directory: ~/repo
+    docker:
+      - image: circleci/golang:1.13.15
     steps:
       - checkout
       - run: docker login -u $DOCKERHUB_USER -p $DOCKERHUB_PASSWORD
       - run: mkdir -p /tmp/artifacts
+      - run:
+          name: Install Kustomize
+          command: go get sigs.k8s.io/kustomize/kustomize/v3
       - run:
           name: Build and push docker image
           command: |
@@ -39,6 +43,7 @@ jobs:
             docker build -t resultadosdigitais/bigtable-autoscaler-operator:$SHORT_GIT_HASH .
             docker push resultadosdigitais/bigtable-autoscaler-operator:$SHORT_GIT_HASH
             docker inspect --format='{{index .RepoDigests 0}}' resultadosdigitais/bigtable-autoscaler-operator:$SHORT_GIT_HASH > /tmp/artifacts/bigtable-autoscaler-operator-docker-image-digest.txt
+
             if [ "$CIRCLE_BRANCH" == "master" ]; then
               docker tag resultadosdigitais/bigtable-autoscaler-operator:$SHORT_GIT_HASH resultadosdigitais/bigtable-autoscaler-operator:stable
               docker push resultadosdigitais/bigtable-autoscaler-operator:stable
@@ -57,9 +62,9 @@ jobs:
       - run:
           name: Releases a new version
           command: |
-            echo $CIRCLE_TAG
-            echo pipeline.git.tag
-            echo "<< pipeline.git.tag >>"
+            VERSION=$(echo $CIRCLE_TAG | cut -c 2-)
+            make release-manifests > /tmp/artifacts/all-in-one.yml
+            make release-image
       - store_artifacts:
           path: /tmp/artifacts
           destination: artifacts
