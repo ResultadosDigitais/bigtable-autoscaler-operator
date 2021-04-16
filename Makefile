@@ -67,7 +67,16 @@ docker-build:
 docker-push:
 	docker push ${IMG}
 
-# find or download controller-gen
+# Generates and push new image
+release-image: docker-build docker-push
+
+# Generates all manifests required to an installation
+release-manifests:
+	cd config/manager && kustomize edit set image controller=${IMG}
+	{ kustomize build config/default & kustomize build config/crd & kustomize build config/rbac; }
+
+
+# Find or download controller-gen
 # download controller-gen if necessary
 controller-gen:
 ifeq (, $(shell which controller-gen))
@@ -83,11 +92,3 @@ CONTROLLER_GEN=$(GOBIN)/controller-gen
 else
 CONTROLLER_GEN=$(shell which controller-gen)
 endif
-
-generate-all-in-one:
-	cd config/manager && kustomize edit set image controller=${IMG}
-	{ kustomize build config/default & kustomize build config/crd & kustomize build config/rbac; } > all-in-one.yml
-
-release: generate-all-in-one docker-build docker-push
-	git tag -a ${VERSION} -m "Release"; \
-    git push origin ${VERSION};
