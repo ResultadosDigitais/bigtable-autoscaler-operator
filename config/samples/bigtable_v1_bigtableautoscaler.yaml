@@ -1,16 +1,16 @@
 apiVersion: bigtable.bigtable-autoscaler.com/v1
 kind: BigtableAutoscaler
 metadata:
-  name: bigtableautoscaler-sample
+  name: my-autoscaler
 spec:
   bigtableClusterRef:
-    projectId: cdp-development
-    instanceId: clustering-engine
-    clusterId: clustering-engine-c1
+    projectId: cool-project
+    instanceId: my-instance-id
+    clusterId: my-cluster-id
   serviceAccountSecretRef:
-    namespace: default
-    name: staging-service-account
+    name: example-service-account
     key: service-account
   minNodes: 1
-  maxNodes: 2
+  maxNodes: 10
   targetCPUUtilization: 50
+
