@@ -67,7 +67,7 @@ You can check your autoscaler running:
 ```sh
 kubectl get bigtableautoscalers
 ```
-![image](https://user-images.githubusercontent.com/2609743/115090116-63460080-9eea-11eb-9764-889827a65510.png)
+![image](https://user-images.githubusercontent.com/2609743/115090158-7eb10b80-9eea-11eb-8720-1839598572bd.png)
 
 
 ## Prerequisites
