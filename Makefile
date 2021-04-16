@@ -73,7 +73,7 @@ release-image: docker-build docker-push
 # Generates all manifests required to an installation
 release-manifests: kustomize
 	@cd config/manager && kustomize edit set image controller=${IMG}
-	@{ $(KUSTOMIZE) build config/default & $(KUSTOMIZE) build config/crd & $(KUSTOMIZE) build config/rbac; }
+	@( $(KUSTOMIZE) build config/default && echo "---" && $(KUSTOMIZE) build config/crd && echo "---" && $(KUSTOMIZE) build config/rbac )
 
 # Find or download kustomize
 # download kustomize if necessary
