@@ -54,7 +54,9 @@ func (s *Syncer) Register(
 			case <-ticker.C:
 				currentCpu, err := googleCloudClient.GetCurrentCPULoad()
 				if err != nil {
-					return fmt.Errorf("failed to get metrics: %w", err)
+					s.log.Error(err, "failed to get nodes metrics")
+
+					continue
 				}
 				autoscaler.Status.CurrentCPUUtilization = &currentCpu
 
@@ -62,7 +64,7 @@ func (s *Syncer) Register(
 				if err != nil {
 					s.log.Error(err, "failed to get nodes count")
 
-					return fmt.Errorf("failed to get nodes count: %w", err)
+					continue
 				}
 
 				autoscaler.Status.CurrentNodes = &currentNodes
