@@ -9,7 +9,6 @@
   * [Usage](#usage)
   * [Prerequisites](#prerequisites)
   * [Installation](#installation)
-  * [How to use this operator in a Kubernetes cluster](#how-to-use-this-operator-in-a-kubernetes-cluster)
   * [Development environment](#development-environment)
     + [Option 1: Run with Tilt (recomended)](#option-1--run-with-tilt--recomended-)
     + [Option 2: Manual run](#option-2--manual-run)
