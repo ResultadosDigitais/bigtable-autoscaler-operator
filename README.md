@@ -6,8 +6,9 @@
 
 - [Bigtable Autoscaler Operator](#bigtable-autoscaler-operator)
   * [Overview](#overview)
+  * [Usage](#usage)
   * [Prerequisites](#prerequisites)
-  * [How to install this operator in a Kubernetes cluster](#how-to-install-this-operator-in-a-kubernetes-cluster)
+  * [Installation](#installation)
   * [How to use this operator in a Kubernetes cluster](#how-to-use-this-operator-in-a-kubernetes-cluster)
   * [Development environment](#development-environment)
     + [Option 1: Run with Tilt (recomended)](#option-1--run-with-tilt--recomended-)
@@ -35,9 +36,12 @@ The image bellow shows how peaks above the CPU target of 50% are shortened by th
 
 ## Usage
 
-
-First of all, you need to create an autoscaling manifest:
-
+Create a k8s secret with your service account:
+```sh
+$ kubectl create secret generic bigtable-autoscaler-service-account --from-file=service-account=./your_service_account.json
+```
+    
+Create an autoscaling manifest:
 ```yml
 # my-autoscaler.yml
 apiVersion: bigtable.bigtable-autoscaler.com/v1
@@ -58,14 +62,13 @@ spec:
 ```
 
 Then you can install it on your k8s cluster:
-
 ```sh
-kubectl apply -f my-autoscaler.yml
+$ kubectl apply -f my-autoscaler.yml
 ```
 
 You can check your autoscaler running:
 ```sh
-kubectl get bigtableautoscalers
+$ kubectl get bigtableautoscalers
 ```
 ![image](https://user-images.githubusercontent.com/2609743/115090158-7eb10b80-9eea-11eb-8720-1839598572bd.png)
 
@@ -74,26 +77,10 @@ kubectl get bigtableautoscalers
 1. Enable [Bigtable](https://cloud.google.com/bigtable/docs/access-control) and [Monitoring](https://cloud.google.com/monitoring/api/enable-api) APIs on your GCP project.
 1. Generate a service account secret with the role for Bigtable administrator.
 
-## How to install this operator in a Kubernetes cluster
+## Installation
 1. Visit the [releases page](https://github.com/ResultadosDigitais/bigtable-autoscaler-operator/releases/), download the `all-in-one.yml` of the version of your choice and apply it
     ``` sh
     kubectl apply -f all-in-one.yml
-    ```
-
-## How to use this operator in a Kubernetes cluster
-1. Use the service account from the [Prerequisites](#prerequisites) section to create the k8s secret
-    ```sh
-    kubectl create secret generic bigtable-autoscaler-service-account --from-file=service-account=./your_service_account.json
-    ```
-
-1. Apply a manifest based on the [sample file](./config/samples/bigtable_v1_bigtableautoscaler.yaml)
-    ``` sh
-    kubectl apply -f my_bigtableautoscaler.yaml
-    ```
-    
-1. Check the autoscaler status
-    ``` sh
-    kubectl get bigtableautoscaler
     ```
 
 ## Development environment
