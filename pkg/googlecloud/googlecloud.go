@@ -61,7 +61,7 @@ func (m *googleCloudClient) GetCurrentCPULoad() (int32, error) {
 	endTime := time.Now().UTC()
 	request := &monitoringpb.ListTimeSeriesRequest{
 		Name:   "projects/" + m.projectID,
-		Filter: `metric.type="bigtable.googleapis.com/cluster/cpu_load"`,
+		Filter: fmt.Sprintf(`metric.type="bigtable.googleapis.com/cluster/cpu_load" resource.type="bigtable_cluster" resource.label."instance"="%s"`, m.instanceID),
 		Interval: &monitoringpb.TimeInterval{
 			StartTime: &timestamp.Timestamp{
 				Seconds: startTime.Unix(),
